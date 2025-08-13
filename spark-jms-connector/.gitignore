@@ -1,0 +1,14 @@
+### IDE and development tools ###
+
+*.class
+*.log
+.idea
+.bsp
+.bloop
+.vscode
+.project
+.settings/
+target/
+
+### Mac OS ###
+.DS_Store
