@@ -9,12 +9,12 @@ import org.apache.spark.sql.util.CaseInsensitiveStringMap
 
 import java.util
 
-class JmsTable(config: JmsSourceConfig, numPartitions: Int) extends Table with SupportsRead {
+class JmsTable(config: JmsSourceConfig, numPartitions: Int, connector: JmsConnector) extends Table with SupportsRead {
 
   override def name(): String = {
     Seq(
       "jms",
-      Utils.removeNonWordChars(config.broker.brokerType),
+      Utils.removeNonWordChars(connector.brokerName),
       Utils.removeNonWordChars(config.queueName),
     ).mkString("_")
   }
@@ -33,7 +33,7 @@ class JmsTable(config: JmsSourceConfig, numPartitions: Int) extends Table with S
       override def readSchema(): StructType = JmsTable.DefaultSchema
 
       override def toMicroBatchStream(checkpointLocation: String): MicroBatchStream = {
-        new JmsMicroBatchStream(config, numPartitions, checkpointLocation)
+        new JmsMicroBatchStream(config, numPartitions, checkpointLocation, connector)
       }
     }
   }

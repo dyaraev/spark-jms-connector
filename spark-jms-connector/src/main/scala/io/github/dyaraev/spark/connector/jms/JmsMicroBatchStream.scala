@@ -14,8 +14,12 @@ import java.util.concurrent.atomic.AtomicBoolean
 import javax.annotation.concurrent.GuardedBy
 import scala.collection.mutable.{ArrayBuffer, ListBuffer}
 
-class JmsMicroBatchStream(config: JmsSourceConfig, numPartitions: Int, checkpointLocation: String)
-    extends MicroBatchStream
+class JmsMicroBatchStream(
+    config: JmsSourceConfig,
+    numPartitions: Int,
+    checkpointLocation: String,
+    jmsConnector: JmsConnector,
+) extends MicroBatchStream
     with Logging {
 
   @GuardedBy("this")
@@ -50,7 +54,7 @@ class JmsMicroBatchStream(config: JmsSourceConfig, numPartitions: Int, checkpoin
     connection = createConnection
     connection.start()
 
-    receiverThread = new Thread(s"JmsSource(${config.broker.brokerType}, ${config.queueName})") {
+    receiverThread = new Thread(s"JmsSource(${jmsConnector.brokerName}, ${config.queueName})") {
       setDaemon(true)
 
       private var lastBatchTimeMs = System.currentTimeMillis()
@@ -71,10 +75,10 @@ class JmsMicroBatchStream(config: JmsSourceConfig, numPartitions: Int, checkpoin
                 JmsMicroBatchStream.this.synchronized {
                   currentOffset += 1
 
-                  logInfo(s"Writing data to WAL for offset $currentOffset")
+                  logInfo(s"Writing data to the WAL for offset $currentOffset")
                   val records = messageBuffer.map(LogEntry.fromMessage)
                   metadataLog.add(currentOffset.offset, records.toArray)
-                  logInfo(s"Updated WAL for offset $currentOffset")
+                  logInfo(s"Updated the WAL for offset $currentOffset")
 
                   logInfo(s"Acknowledging ${messageBuffer.length} messages ...")
                   messageBuffer.last.acknowledge()
@@ -86,6 +90,8 @@ class JmsMicroBatchStream(config: JmsSourceConfig, numPartitions: Int, checkpoin
           }
         } catch {
           case e: Throwable => if (receiverException == null) receiverException = e
+        } finally {
+          logWarning("JMS receiver is down")
         }
       }
     }
@@ -100,9 +106,7 @@ class JmsMicroBatchStream(config: JmsSourceConfig, numPartitions: Int, checkpoin
 
   override def latestOffset(): Offset = this.synchronized {
     if (initialized.compareAndSet(false, true)) initialize()
-    if (receiverException != null) {
-      throw new RuntimeException("JMS receiver error", receiverException)
-    }
+    if (receiverException != null) throw new RuntimeException("JMS receiver error", receiverException)
 
     logInfo(s"Retrieved latest offset $currentOffset")
     currentOffset
@@ -173,10 +177,10 @@ class JmsMicroBatchStream(config: JmsSourceConfig, numPartitions: Int, checkpoin
     }
   }
 
-  override def toString: String = s"JmsV2[type: ${config.broker.brokerType}, queue: ${config.queueName}]"
+  override def toString: String = s"JmsV2[type: ${jmsConnector.brokerName}, queue: ${config.queueName}]"
 
   private def createConnection: Connection = {
-    val connection = ConnectionFactoryProvider.newConnectionFactory(config).createConnection()
+    val connection = jmsConnector.getConnectionFactory(config.brokerOptions).createConnection()
     connection.setExceptionListener { e: JMSException => logError(s"Connection error in JMS receiver", e) }
     connection
   }

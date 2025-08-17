@@ -1,4 +1,4 @@
-package io.github.dyaraev.spark.connector.jms.test
+package io.github.dyaraev.spark.connector.jms.activemq.utils
 
 import org.apache.activemq.broker.BrokerService
 

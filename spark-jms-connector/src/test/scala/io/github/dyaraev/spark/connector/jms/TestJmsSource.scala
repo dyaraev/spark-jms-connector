@@ -1,6 +1,6 @@
-package io.github.dyaraev.spark.connector.jms.test
+package io.github.dyaraev.spark.connector.jms
 
-import io.github.dyaraev.spark.connector.jms.JmsSourceConfig.ActiveMqConfig
+import io.github.dyaraev.spark.connector.jms.activemq.utils.{ActiveMqMessageGenerator, ActiveMqServer}
 import org.apache.hadoop.fs.FileSystem
 import org.apache.spark.SparkConf
 import org.apache.spark.sql.SparkSession
@@ -29,8 +29,8 @@ object TestJmsSource {
       .option("jms.queueName", ActiveMqMessageGenerator.QueueName)
       .option("jms.receiver.intervalMs", "5000")
       .option("jms.receiver.timeoutMs", "1000")
+      .option("jms.receiver.connector", "io.github.dyaraev.spark.connector.jms.activemq.ActiveMqConnector")
       .option("jms.broker.url", ActiveMqServer.Uri)
-      .option("jms.broker.type", ActiveMqConfig.BrokerType)
       .option("numPartitions", 16)
       .load()
       .repartition(1)

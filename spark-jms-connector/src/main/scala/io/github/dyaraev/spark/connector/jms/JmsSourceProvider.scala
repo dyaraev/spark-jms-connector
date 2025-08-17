@@ -10,9 +10,10 @@ import org.apache.spark.sql.util.CaseInsensitiveStringMap
 class JmsSourceProvider extends SimpleTableProvider with DataSourceRegister with Logging {
 
   override def getTable(options: CaseInsensitiveStringMap): Table = {
-    val partitions = options.getInt("numPartitions", SparkSession.active.sparkContext.defaultParallelism)
     val config = JmsSourceConfig.fromOptions(options)
-    new JmsTable(config, partitions)
+    val partitions = options.getInt("numPartitions", SparkSession.active.sparkContext.defaultParallelism)
+    val connectionFactoryProvider = JmsConnector.findImplementation(config.receiver.connector)
+    new JmsTable(config, partitions, connectionFactoryProvider)
   }
 
   override def shortName(): String = "jms"
