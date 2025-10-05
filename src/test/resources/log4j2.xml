@@ -1,0 +1,18 @@
+<Configuration status="WARN">
+    <Appenders>
+        <Console name="Console" target="SYSTEM_OUT">
+            <PatternLayout pattern="%d{yyyy-MM-dd HH:mm:ss} %-5p %c:%L - %m%n"/>
+        </Console>
+    </Appenders>
+
+    <Loggers>
+        <Root level="WARN">
+            <AppenderRef ref="Console"/>
+        </Root>
+
+        <Logger name="io.github.dyaraev.spark.connector.jms.common.metadata.MetadataLog" level="WARN" />
+<!--        <Logger name="org.apache.spark.sql.execution.datasources.FileScanRDD" level="INFO" />-->
+        <Logger name="io.github.dyaraev.spark.connector.jms" level="INFO" />
+        <Logger name="org.apache.spark.sql.jms" level="INFO" />
+    </Loggers>
+</Configuration>
