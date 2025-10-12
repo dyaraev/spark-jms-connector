@@ -1,2 +1,0 @@
-io.github.dyaraev.spark.connector.jms.v2.JmsSourceProvider
-org.apache.spark.sql.jms.JmsSourceProvider
