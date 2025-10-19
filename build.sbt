@@ -5,7 +5,19 @@ inThisBuild(
     scalaVersion := "2.12.20",
     semanticdbEnabled := true,
     semanticdbVersion := scalafixSemanticdb.revision,
-    scalacOptions += "-Ywarn-unused-import",
+    scalacOptions ++= Seq(
+      "--deprecation",
+      "--feature",
+      "--unchecked",
+      "-Ywarn-adapted-args",
+      "-Ywarn-dead-code",
+      "-Ywarn-inaccessible",
+      "-Ywarn-infer-any",
+      "-Ywarn-nullary-override",
+      "-Ywarn-nullary-unit",
+      "-Ywarn-numeric-widen",
+      "-Ywarn-unused",
+    ),
   )
 )
 

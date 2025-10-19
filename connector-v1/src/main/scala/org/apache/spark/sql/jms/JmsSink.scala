@@ -97,6 +97,6 @@ class JmsSink(config: JmsSinkConfig) extends Sink with Serializable with Logging
 
 object JmsSink {
 
-  private val MaxSendAttempts = 3
-  private val MinRetryInterval = 5000
+  private val MaxSendAttempts: Int = 3
+  private val MinRetryInterval: Long = 5000
 }

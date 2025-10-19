@@ -72,9 +72,9 @@ trait JmsDataWriter[T] extends DataWriter[InternalRow] with Serializable with Lo
 
 object JmsDataWriter {
 
-  private val MaxSendAttempts = 3
+  private val MaxSendAttempts: Int = 3
 
-  private val MinRetryInterval = 5000
+  private val MinRetryInterval: Long = 5000
 
   case class JmsCommitMessage(numMessages: Int) extends WriterCommitMessage
 }

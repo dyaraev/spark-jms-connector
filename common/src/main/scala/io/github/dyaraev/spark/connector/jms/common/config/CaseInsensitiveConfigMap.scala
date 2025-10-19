@@ -8,10 +8,10 @@ import scala.reflect.{ClassTag, classTag}
 
 class CaseInsensitiveConfigMap(val original: Map[String, String]) extends Serializable {
 
-  private val cimap: Map[String, String] = original.map { case (k, v) => k.toLowerCase(Locale.ROOT) -> v }
+  private val ciMap: Map[String, String] = original.map { case (k, v) => k.toLowerCase(Locale.ROOT) -> v }
 
   def getOptional[T: ClassTag](key: String)(implicit decoder: MapValueDecoder[T]): Option[T] = {
-    val maybeValue = cimap.get(key.toLowerCase(Locale.ROOT))
+    val maybeValue = ciMap.get(key.toLowerCase(Locale.ROOT))
     try maybeValue.map(decoder.decode)
     catch {
       case e: Throwable =>
@@ -21,7 +21,7 @@ class CaseInsensitiveConfigMap(val original: Map[String, String]) extends Serial
   }
 
   def getRequired[T: ClassTag](key: String)(implicit decoder: MapValueDecoder[T]): T = {
-    val value = cimap(key.toLowerCase(Locale.ROOT))
+    val value = ciMap(key.toLowerCase(Locale.ROOT))
     try decoder.decode(value)
     catch {
       case e: Throwable =>
@@ -60,7 +60,7 @@ object CaseInsensitiveConfigMap {
     implicit val StringMapValueDecoder: MapValueDecoder[String] = (v: String) => v
     implicit val MessageFormatDecoder: MapValueDecoder[MessageFormat] = (s: String) => MessageFormat(s)
 
-    implicit class CaseInsensitiveStringMapOps(val map: CaseInsensitiveStringMap) extends AnyVal {
+    implicit class CaseInsensitiveStringMapOps(private val map: CaseInsensitiveStringMap) extends AnyVal {
       def toConfigMap: CaseInsensitiveConfigMap = CaseInsensitiveConfigMap(map.asCaseSensitiveMap())
     }
   }
