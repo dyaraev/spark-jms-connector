@@ -7,7 +7,7 @@ import io.github.dyaraev.spark.connector.jms.example.utils.SparkUtils
 import org.apache.spark.internal.Logging
 import org.apache.spark.sql.streaming.Trigger
 
-import java.nio.file.{Path, Paths}
+import java.nio.file.Paths
 
 // Your IDE amy require the following JVM option for running this code:
 // --add-exports java.base/sun.nio.ch=ALL-UNNAMED
@@ -40,9 +40,5 @@ object JmsSinkExample extends Logging {
       .start()
 
     query.awaitTermination()
-  }
-
-  private def defaultSourceDirectory: Path = {
-    Paths.get(getClass.getClassLoader.getResource(".").toURI).resolve("source")
   }
 }
