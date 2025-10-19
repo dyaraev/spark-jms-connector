@@ -16,7 +16,7 @@ class JmsSourceClient(connection: Connection, consumer: MessageConsumer) extends
 
   def closeSilently(): Unit = {
     try connection.close()
-    catch CommonUtils.logException("Error while closing the connection")
+    catch CommonUtils.logException("Unexpected error while closing the JMS connection")
   }
 
   override def close(): Unit = connection.close()

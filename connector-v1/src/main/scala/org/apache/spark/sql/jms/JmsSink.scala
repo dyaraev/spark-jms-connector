@@ -6,6 +6,7 @@ import io.github.dyaraev.spark.connector.jms.common.config.JmsSinkConfig
 import io.github.dyaraev.spark.connector.jms.common.config.MessageFormat.{BinaryFormat, TextFormat}
 import org.apache.spark.internal.Logging
 import org.apache.spark.sql.DataFrame
+import org.apache.spark.sql.catalyst.InternalRow
 import org.apache.spark.sql.catalyst.expressions.{Attribute, Cast, Expression, UnsafeProjection}
 import org.apache.spark.sql.execution.QueryExecution
 import org.apache.spark.sql.execution.streaming.Sink
@@ -22,7 +23,7 @@ class JmsSink(config: JmsSinkConfig) extends Sink with Serializable with Logging
   @volatile
   private var latestBatchId = -1L
 
-  override def toString: String = "JmsSink"
+  override def toString: String = "JmsSinkV1"
 
   override def addBatch(batchId: Long, data: DataFrame): Unit = {
     if (batchId <= latestBatchId) {
@@ -40,19 +41,19 @@ class JmsSink(config: JmsSinkConfig) extends Sink with Serializable with Logging
 
   private def sendBytesMessages(queryExecution: QueryExecution): Unit = {
     val schema = queryExecution.analyzed.output
-    queryExecution.toRdd.foreachPartition { iter =>
+    queryExecution.toRdd.foreachPartition { rows: Iterator[InternalRow] =>
       val expressions = Seq(Cast(valueExpression(schema, Seq(BinaryType, StringType)), BinaryType))
       val projection = UnsafeProjection.create(expressions, schema)
-      iter.foreach(ir => sendMessage(_.sendBytesMessage(projection(ir).getBinary(0))))
+      rows.foreach(row => sendMessage(_.sendBytesMessage(projection(row).getBinary(0))))
     }
   }
 
   private def sendTextMessages(queryExecution: QueryExecution): Unit = {
     val schema = queryExecution.analyzed.output
-    queryExecution.toRdd.foreachPartition { iter =>
+    queryExecution.toRdd.foreachPartition { rows: Iterator[InternalRow] =>
       val expressions = Seq(Cast(valueExpression(schema, Seq(BinaryType, StringType)), StringType))
       val projection = UnsafeProjection.create(expressions, schema)
-      iter.foreach(ir => sendMessage(_.sendTextMessage(projection(ir).getString(0))))
+      rows.foreach(row => sendMessage(_.sendTextMessage(projection(row).getString(0))))
     }
   }
 

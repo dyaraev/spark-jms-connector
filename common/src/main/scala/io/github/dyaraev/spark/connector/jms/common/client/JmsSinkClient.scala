@@ -25,7 +25,7 @@ class JmsSinkClient(connection: Connection, session: Session, producer: MessageP
 
   def closeSilently(): Unit = {
     try connection.close()
-    catch CommonUtils.logException("Unexpected error while stopping the JMS connection")
+    catch CommonUtils.logException("Unexpected error while closing the JMS connection")
   }
 
   override def close(): Unit = connection.close()

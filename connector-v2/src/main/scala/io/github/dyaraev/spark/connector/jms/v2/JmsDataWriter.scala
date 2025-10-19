@@ -64,7 +64,7 @@ trait JmsDataWriter[T] extends DataWriter[InternalRow] with Serializable with Lo
 
   private def closeClientIfExists(): Unit = {
     if (client != null) {
-      client.close()
+      client.closeSilently()
       client = null
     }
   }

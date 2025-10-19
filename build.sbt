@@ -1,7 +1,10 @@
 // TODO: add support for Scala 2.13.*
+
 inThisBuild(
   List(
     organization := "io.github.dyaraev",
+    description := "JMS Connector for Apache Spark",
+    homepage := Some(url("https://github.com/dyaraev/spark-jms-connector")),
     scalaVersion := "2.12.20",
     semanticdbEnabled := true,
     semanticdbVersion := scalafixSemanticdb.revision,

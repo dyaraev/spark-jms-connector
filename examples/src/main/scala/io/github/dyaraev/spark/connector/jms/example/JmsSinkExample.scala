@@ -5,29 +5,40 @@ import io.github.dyaraev.spark.connector.jms.activemq.{ActiveMqConfig, ActiveMqC
 import io.github.dyaraev.spark.connector.jms.common.config.{JmsConnectionConfig, JmsSinkConfig, MessageFormat}
 import io.github.dyaraev.spark.connector.jms.example.utils.SparkUtils
 import org.apache.spark.internal.Logging
+import org.apache.spark.sql.SparkSession
 import org.apache.spark.sql.streaming.Trigger
 
 import java.nio.file.Paths
 
 // Your IDE amy require the following JVM option for running this code:
-// --add-exports java.base/sun.nio.ch=ALL-UNNAMED
+// --add-opens java.base/sun.nio.ch=ALL-UNNAMED
 object JmsSinkExample extends Logging {
 
   private val logger = Logger(getClass)
 
   def main(args: Array[String]): Unit = {
     val spark = SparkUtils.getOrCreateSession()
+    Runtime.getRuntime.addShutdownHook {
+      new Thread("ShutdownHook") {
+        override def run(): Unit = {
+          logger.info("Stopping Spark session ...")
+          spark.stop()
+        }
+      }
+    }
 
     val workingDirectory = Paths.get(args.head)
+    val sourcePath = workingDirectory.resolve("source")
     val checkpointPath = workingDirectory.resolve("checkpoint")
     logger.info(s"Storing checkpoint data at $checkpointPath")
+    logger.info(s"Reading data from $sourcePath")
+    runJob(spark, sourcePath.toString, checkpointPath.toString)
+  }
 
-    val sourceDirectory = workingDirectory.resolve("incoming")
-    logger.info(s"Reading data from $sourceDirectory")
-
+  private def runJob(spark: SparkSession, sourcePath: String, checkpointPath: String): Unit = {
     val query = spark.readStream
       .format("text")
-      .load(sourceDirectory.toString)
+      .load(sourcePath)
       .repartition(1)
       .writeStream
       .format("jms-v2")
@@ -36,7 +47,7 @@ object JmsSinkExample extends Logging {
       .option(JmsConnectionConfig.OptionFactoryProvider, classOf[ActiveMqConnectionFactoryProvider].getName)
       .option(ActiveMqConfig.OptionsJmsBrokerUrl, ActiveMqMessageReader.Uri)
       .trigger(Trigger.ProcessingTime(10000))
-      .option("checkpointLocation", checkpointPath.toString)
+      .option("checkpointLocation", checkpointPath)
       .start()
 
     query.awaitTermination()

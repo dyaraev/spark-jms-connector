@@ -35,6 +35,8 @@ class JmsSource[T <: LogEntry: ClassTag](
 
   initialize()
 
+  override def toString: String = "JmsSourceV1"
+
   override def getOffset: Option[Offset] = synchronized {
     if (receiverException != null) throw new RuntimeException("JMS receiver error", receiverException)
 
