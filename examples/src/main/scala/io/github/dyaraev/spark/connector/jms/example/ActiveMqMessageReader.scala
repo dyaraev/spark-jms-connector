@@ -1,12 +1,12 @@
 package io.github.dyaraev.spark.connector.jms.example
 
 import io.github.dyaraev.spark.connector.jms.common.client.JmsSourceClient
-import io.github.dyaraev.spark.connector.jms.common.utils.CommonUtils
 import io.github.dyaraev.spark.connector.jms.example.utils.ActiveMqServer
 import jakarta.jms.{BytesMessage, TextMessage}
 import org.apache.activemq.ActiveMQConnectionFactory
 
 import java.nio.file.Paths
+import scala.util.Using
 
 object ActiveMqMessageReader extends ActiveMqServer {
 
@@ -43,7 +43,7 @@ object ActiveMqMessageReader extends ActiveMqServer {
       setDaemon(true)
 
       override def run(): Unit = {
-        CommonUtils.withCloseable(client) { c =>
+        Using(client) { c =>
           while (!isStopped) {
             c.receive(1000) match {
               case message: BytesMessage =>

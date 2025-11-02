@@ -1,11 +1,11 @@
 package io.github.dyaraev.spark.connector.jms.example
 
 import io.github.dyaraev.spark.connector.jms.common.client.JmsSinkClient
-import io.github.dyaraev.spark.connector.jms.common.utils.CommonUtils
 import io.github.dyaraev.spark.connector.jms.example.utils.ActiveMqServer
 import org.apache.activemq.ActiveMQConnectionFactory
 
 import java.nio.file.Paths
+import scala.util.Using
 
 object ActiveMqMessageGenerator extends ActiveMqServer {
 
@@ -70,7 +70,7 @@ object ActiveMqMessageGenerator extends ActiveMqServer {
 
       override def run(): Unit = {
         val startTimeMs = System.currentTimeMillis()
-        CommonUtils.withCloseable(client) { mqClient =>
+        Using(client) { mqClient =>
           while (!isStopped) {
             counter += 1
             mqClient.sendTextMessage(counter.toString)
