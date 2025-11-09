@@ -6,7 +6,6 @@ import io.github.dyaraev.spark.connector.jms.common.config.JmsSinkConfig
 import io.github.dyaraev.spark.connector.jms.common.config.MessageFormat.{BinaryFormat, TextFormat}
 import org.apache.spark.internal.Logging
 import org.apache.spark.sql.DataFrame
-import org.apache.spark.sql.catalyst.InternalRow
 import org.apache.spark.sql.catalyst.expressions.{Attribute, Cast, Expression, UnsafeProjection}
 import org.apache.spark.sql.execution.QueryExecution
 import org.apache.spark.sql.execution.streaming.Sink
@@ -14,6 +13,8 @@ import org.apache.spark.sql.jms.JmsSink.{MaxSendAttempts, MinRetryInterval}
 import org.apache.spark.sql.types.{BinaryType, DataType, StringType}
 
 import scala.annotation.tailrec
+import scala.util.{Failure, Success, Try}
+import scala.util.control.NonFatal
 
 class JmsSink(config: JmsSinkConfig) extends Sink with Serializable with Logging {
 
@@ -23,7 +24,7 @@ class JmsSink(config: JmsSinkConfig) extends Sink with Serializable with Logging
   @volatile
   private var latestBatchId = -1L
 
-  override def toString: String = "JmsSinkV1"
+  override def toString: String = "JmsSink"
 
   override def addBatch(batchId: Long, data: DataFrame): Unit = {
     if (batchId <= latestBatchId) {
@@ -41,19 +42,29 @@ class JmsSink(config: JmsSinkConfig) extends Sink with Serializable with Logging
 
   private def sendBytesMessages(queryExecution: QueryExecution): Unit = {
     val schema = queryExecution.analyzed.output
-    queryExecution.toRdd.foreachPartition { rows: Iterator[InternalRow] =>
+    queryExecution.toRdd.foreachPartition { iter =>
       val expressions = Seq(Cast(valueExpression(schema, Seq(BinaryType, StringType)), BinaryType))
       val projection = UnsafeProjection.create(expressions, schema)
-      rows.foreach(row => sendMessage(_.sendBytesMessage(projection(row).getBinary(0))))
+      var counter = 0
+      iter.foreach { row =>
+        counter += 1
+        sendMessage(_.sendBytesMessage(projection(row).getBinary(0)))
+      }
+      commitJmsTransaction(counter)
     }
   }
 
   private def sendTextMessages(queryExecution: QueryExecution): Unit = {
     val schema = queryExecution.analyzed.output
-    queryExecution.toRdd.foreachPartition { rows: Iterator[InternalRow] =>
+    queryExecution.toRdd.foreachPartition { iter =>
       val expressions = Seq(Cast(valueExpression(schema, Seq(BinaryType, StringType)), StringType))
       val projection = UnsafeProjection.create(expressions, schema)
-      rows.foreach(row => sendMessage(_.sendTextMessage(projection(row).getString(0))))
+      var counter = 0
+      iter.foreach { row =>
+        counter += 1
+        sendMessage(_.sendTextMessage(projection(row).getString(0)))
+      }
+      commitJmsTransaction(counter)
     }
   }
 
@@ -67,30 +78,44 @@ class JmsSink(config: JmsSinkConfig) extends Sink with Serializable with Logging
 
   @tailrec
   private def sendMessage(f: JmsSinkClient => Unit, attempt: Int = 1): Unit = {
-    try f(getOrCreateWriter())
-    catch {
-      case e: Throwable =>
+    Try(f(getOrCreateWriter())) match {
+      case Success(_) =>
+      case Failure(NonFatal(e)) =>
         if (attempt <= MaxSendAttempts) {
           logError(s"Error sending message (attempt=$attempt), retrying ...", e)
-          Thread.sleep(attempt * MinRetryInterval)
+          Thread.sleep((scala.math.pow(2, attempt) * MinRetryInterval).toLong)
           closeClientIfExists()
           sendMessage(f, attempt + 1)
         } else {
           throw new RuntimeException("Unable to send message", e)
         }
+      case Failure(e) => throw e
+    }
+  }
+
+  private def commitJmsTransaction(numMessages: Int): Unit = {
+    if (client != null) {
+      logInfo(s"Committing $numMessages JMS messages")
+      try {
+        client.commit()
+      } catch {
+        case NonFatal(e) =>
+          logError(s"Failed to commit JMS transaction", e)
+          throw new RuntimeException("JMS commit failed", e)
+      }
     }
   }
 
   private def getOrCreateWriter(): JmsSinkClient = {
     if (client == null) {
-      client = JmsSinkClient(config.connection, None)
+      client = JmsSinkClient(config.connection, None, transacted = true)
     }
     client
   }
 
   private def closeClientIfExists(): Unit = {
     if (client != null) {
-      client.closeSilently()
+      client.close()
       client = null
     }
   }
@@ -98,6 +123,6 @@ class JmsSink(config: JmsSinkConfig) extends Sink with Serializable with Logging
 
 object JmsSink {
 
-  private val MaxSendAttempts: Int = 3
-  private val MinRetryInterval: Long = 5000
+  private val MaxSendAttempts = 3
+  private val MinRetryInterval = 5000
 }

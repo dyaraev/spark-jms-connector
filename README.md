@@ -14,13 +14,14 @@ _Please read [the disclaimer](#disclaimer) below before using this connector._
 - [Usage](#usage)
     - [Reading from JMS Queue](#reading-from-jms-queue)
     - [Writing to JMS Queue](#writing-to-jms-queue)
+- [Implementing ConnectionFactoryProvider](#implementing-connectionfactoryprovider)
 - [Configuration Options](#configuration-options)
     - [Connection Options](#connection-options)
     - [Source Options](#source-options)
     - [Sink Options](#sink-options)
 - [Building](#building-the-project)
 - [Running Examples](#running-examples)
-- [Implementing Custom Connection Factory Provider](#implementing-a-custom-connection-factory-provider)
+- [Limitations and Considerations](#limitations-and-considerations)
 - [License](#license)
 - [Contributing](#contributing)
 - [Disclaimer](#disclaimer)
@@ -124,7 +125,7 @@ df.repartition(1)
 
 The sink component of the connector includes retry logic that performs up to three attempts with exponential backoff, helping to handle temporary connection issues.
 
-## Implementing a Custom Connection Factory Provider
+## Implementing ConnectionFactoryProvider
 
 To use with your JMS provider, implement the `ConnectionFactoryProvider` interface:
 
@@ -224,6 +225,19 @@ sbt "examples/runMain io.github.dyaraev.spark.connector.jms.example.JmsSinkExamp
 ```
 
 Executing examples may require the following JVM option to be set: `--add-exports java.base/sun.nio.ch=ALL-UNNAMED`.
+
+## Limitations and Considerations
+
+The connector is still in development and may contain bugs and limitations. 
+Since it's mostly a proof-of-concept, it's not recommended for production use.
+Some of the limitations include:
+- JMS connections are not pooled
+- No full support of the JMS 2.0 specification
+- Receiving messages from a queue is done in a driver in a single threaded manner, so it may affect performance in distributed environments
+- Sending messages is done in executors, so every executor task creates its own connection
+- The number of connections used by the sink component depends on the number of partitions
+- Connections in the sink component are created for each batch and not reused
+- The connector uses a fail-fast strategy, so no proper retry logic for failed writes is implemented
 
 ## License
 

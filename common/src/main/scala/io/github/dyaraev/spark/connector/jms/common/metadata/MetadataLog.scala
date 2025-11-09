@@ -12,10 +12,10 @@ class MetadataLog[T <: LogEntry: ClassTag](spark: SparkSession, checkpointLocati
     extends HDFSMetadataLog[Array[T]](spark, checkpointLocation) {
 
   override protected def serialize(metadata: Array[T], out: OutputStream): Unit = {
-    Using(new ObjectOutputStream(out))(_.writeObject(metadata)).get
+    Using.resource(new ObjectOutputStream(out))(_.writeObject(metadata))
   }
 
   override protected def deserialize(in: InputStream): Array[T] = {
-    Using(new ObjectInputStream(in))(_.readObject().asInstanceOf[Array[T]]).get
+    Using.resource(new ObjectInputStream(in))(_.readObject().asInstanceOf[Array[T]])
   }
 }

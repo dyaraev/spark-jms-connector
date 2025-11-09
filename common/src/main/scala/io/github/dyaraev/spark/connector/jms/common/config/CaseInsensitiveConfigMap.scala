@@ -5,6 +5,7 @@ import org.apache.spark.sql.util.CaseInsensitiveStringMap
 
 import java.util.Locale
 import scala.reflect.{ClassTag, classTag}
+import scala.util.control.NonFatal
 
 class CaseInsensitiveConfigMap(val original: Map[String, String]) extends Serializable {
 
@@ -14,7 +15,7 @@ class CaseInsensitiveConfigMap(val original: Map[String, String]) extends Serial
     val maybeValue = ciMap.get(key.toLowerCase(Locale.ROOT))
     try maybeValue.map(decoder.decode)
     catch {
-      case e: Throwable =>
+      case NonFatal(e) =>
         val className = classTag[T].runtimeClass.getName
         throw new RuntimeException(s"Unable to parse $className from $key", e)
     }
@@ -24,7 +25,7 @@ class CaseInsensitiveConfigMap(val original: Map[String, String]) extends Serial
     val value = ciMap(key.toLowerCase(Locale.ROOT))
     try decoder.decode(value)
     catch {
-      case e: Throwable =>
+      case NonFatal(e) =>
         val className = classTag[T].runtimeClass.getName
         throw new RuntimeException(s"Unable to parse $className from $key", e)
     }
