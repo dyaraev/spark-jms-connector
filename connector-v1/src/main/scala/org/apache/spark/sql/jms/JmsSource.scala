@@ -12,7 +12,6 @@ import org.apache.spark.sql.types._
 import org.apache.spark.sql.{DataFrame, SQLContext}
 
 import javax.annotation.concurrent.GuardedBy
-import scala.collection.mutable.ListBuffer
 import scala.reflect.ClassTag
 
 class JmsSource[T <: LogEntry: ClassTag](
@@ -32,6 +31,9 @@ class JmsSource[T <: LogEntry: ClassTag](
 
   @GuardedBy("this")
   private var currentOffset: Option[LongOffset] = metadataLog.getLatestBatchId().map(LongOffset(_))
+
+  @GuardedBy("this")
+  private var stopFlag = false
 
   initialize()
 
@@ -58,7 +60,10 @@ class JmsSource[T <: LogEntry: ClassTag](
     sqlContext.internalCreateDataFrame(rdd, schema, isStreaming = true)
   }
 
-  override def stop(): Unit = logInfo("Stopping JMS source ...")
+  override def stop(): Unit = synchronized {
+    logInfo("Stopping JMS source ...")
+    stopFlag = true
+  }
 
   private def deserializeOffset(offset: Offset): LongOffset = offset match {
     case o: LongOffset       => o
@@ -67,21 +72,21 @@ class JmsSource[T <: LogEntry: ClassTag](
 
   private def initialize(): Unit = {
     val provider = ConnectionFactoryProvider.createInstance(config.connection.factoryProvider)
-    val client: JmsSourceClient = JmsSourceClient(provider, config.connection)
-    val receiverTask = new ReceiverTask(client, config.bufferSize, config.receiveTimeoutMs, config.logIntervalMs) {
+    val client: JmsSourceClient = JmsSourceClient(provider, config.connection, transacted = true)
+    val receiverTask = new ReceiverTask(client, config.bufferSize, config.receiveTimeoutMs, config.commitIntervalMs) {
 
-      override protected def updateLog(buffer: ListBuffer[Message]): Unit = JmsSource.this.synchronized {
+      override protected def shouldStop(): Boolean = JmsSource.this.synchronized {
+        JmsSource.this.stopFlag
+      }
+
+      override protected def walCommit(messages: Array[Message]): Unit = JmsSource.this.synchronized {
         currentOffset = currentOffset.map(_ + 1).orElse(Some(LongOffset(0L)))
         logDebug(s"Updated current offset to $currentOffset")
 
-        logInfo(s"Writing data to the WAL for offset $currentOffset ...")
-        val records = buffer.map(LogEntry.fromMessage[T])
-        metadataLog.add(currentOffset.map(_.offset).getOrElse(0), records.toArray)
-        logInfo(s"Updated the WAL for offset $currentOffset")
-
-        logInfo(s"Acknowledging ${buffer.length} messages ...")
-        buffer.last.acknowledge()
-        buffer.clear()
+        currentOffset.foreach(offset => logInfo(s"Writing data to the WAL for offset $offset ..."))
+        val records = messages.map(LogEntry.fromMessage[T])
+        metadataLog.add(currentOffset.map(_.offset).getOrElse(0), records)
+        currentOffset.foreach(offset => logInfo(s"Updated the WAL for offset $offset"))
       }
 
       override protected def reportException(exception: Throwable): Unit = JmsSource.this.synchronized {

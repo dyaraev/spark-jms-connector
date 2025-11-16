@@ -14,14 +14,14 @@ _Please read [the disclaimer](#disclaimer) below before using this connector._
 - [Usage](#usage)
     - [Reading from JMS Queue](#reading-from-jms-queue)
     - [Writing to JMS Queue](#writing-to-jms-queue)
+- [Implementing ConnectionFactoryProvider](#implementing-connectionfactoryprovider)
 - [Configuration Options](#configuration-options)
     - [Connection Options](#connection-options)
     - [Source Options](#source-options)
     - [Sink Options](#sink-options)
 - [Building](#building-the-project)
 - [Running Examples](#running-examples)
-- [Implementing Custom Connection Factory Provider](#implementing-a-custom-connection-factory-provider)
-- [License](#license)
+- [Limitations and Considerations](#limitations-and-considerations)
 - [Contributing](#contributing)
 - [Disclaimer](#disclaimer)
 
@@ -76,7 +76,7 @@ val df = spark.readStream
   // broker options for the provided connection factory implementation
   .option("jms.source.messageFormat", "text")
   .option("jms.source.receiveTimeoutMs", "1000")
-  .option("jms.source.logIntervalMs", "10000")
+  .option("jms.source.commitIntervalMs", "10000")
   .option("jms.source.numPartitions", "8")
   .load()
 ```
@@ -124,7 +124,7 @@ df.repartition(1)
 
 The sink component of the connector includes retry logic that performs up to three attempts with exponential backoff, helping to handle temporary connection issues.
 
-## Implementing a Custom Connection Factory Provider
+## Implementing ConnectionFactoryProvider
 
 To use with your JMS provider, implement the `ConnectionFactoryProvider` interface:
 
@@ -176,7 +176,7 @@ The following options can be provided to both DataStreamReader:
 | Option                        | Required | Description                                                                                                              |
 |-------------------------------|----------|--------------------------------------------------------------------------------------------------------------------------|
 | `jms.source.messageFormat`    | Yes      | Message format that depends on the Message type (TextMessage or BytesMessage): `text` or `binary`                        |
-| `jms.source.logIntervalMs`    | Yes      | Interval in milliseconds to use for storing received messages in the write-ahead log                                     |
+| `jms.source.commitIntervalMs` | Yes      | Interval in milliseconds to use for storing received messages in the write-ahead log                                     |
 | `jms.source.receiveTimeoutMs` | No       | Timeout in milliseconds for using when Consumer.receive(...) is called; if omitted Consumer.receiveNoWait() will be used |
 | `jms.source.bufferSize`       | No       | Size of the internal buffer to store messages before they are written into the write-ahead log (defaults to 5000)        |
 | `jms.source.numOffsetsToKeep` | No       | Number of offsets in the Spark metadata directory to retain for tracking (defaults to 100)                               |
@@ -208,26 +208,33 @@ This will create JAR files in the target directories:
 The project includes examples for working with ActiveMQ. To run each example, you have to execute two commands:
 
 ```bash
-# Run ActiveMQ broker and message generator
-sbt "examples/runMain io.github.dyaraev.spark.connector.jms.example.ActiveMqMessageGenerator /tmp/activemq-data"
-
-# Run Spark application
-sbt "examples/runMain io.github.dyaraev.spark.connector.jms.example.JmsSourceExample /tmp/spark-test-source" 
+# Run an ActiveMQ broker, a test message generator and an example Spark job with the JMS source
+sbt "examples/runMain io.github.dyaraev.spark.connector.jms.example.ExampleApp receiver-job --workingDirectory /tmp/spark-receiver-job"
 ```
 
 ```bash
-# Run ActiveMQ broker and message reader
-sbt "examples/runMain io.github.dyaraev.spark.connector.jms.example.ActiveMqMessageReader /tmp/activemq-data"
+# Run an ActiveMQ broker, a test file generator, an example Spark job with the JMS sink and a test message reader
+sbt "examples/runMain io.github.dyaraev.spark.connector.jms.example.ExampleApp sender-job --workingDirectory /tmp/spark-sender-job"
 
-# Run Spark application
-sbt "examples/runMain io.github.dyaraev.spark.connector.jms.example.JmsSinkExample /tmp/spark-test-sink"
 ```
 
-Executing examples may require the following JVM option to be set: `--add-exports java.base/sun.nio.ch=ALL-UNNAMED`.
+You can play with the example applications by changing the configuration options.
+All available options are listed when running commands with the `--help` flag.
 
-## License
+Executing examples in an IDE may require the following JVM option to be set: `--add-opens java.base/sun.nio.ch=ALL-UNNAMED`.
 
-TODO: add license information here
+## Limitations and Considerations
+
+The connector is still in development and may contain bugs and limitations. 
+Since it's mostly a proof-of-concept, it's not recommended for production use.
+Some of the limitations include:
+- JMS connections are not pooled
+- No full support of the JMS 2.0 specification
+- Receiving messages from a queue is done in a driver in a single threaded manner, so it may affect performance in distributed environments
+- Sending messages is done in executors, so every executor task creates its own connection
+- The number of connections used by the sink component depends on the number of partitions
+- Connections in the sink component are created for each batch and not reused
+- The connector uses a fail-fast strategy, so no proper retry logic for failed writes is implemented
 
 ## Contributing
 

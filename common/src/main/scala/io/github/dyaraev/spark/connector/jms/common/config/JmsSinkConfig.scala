@@ -6,18 +6,25 @@ case class JmsSinkConfig(
     connection: JmsConnectionConfig,
     messageFormat: MessageFormat,
     throttlingDelayMs: Option[Int],
-)
+) {
+
+  def validate(): Unit = {
+    throttlingDelayMs.foreach(d => require(d > 0, "Throttling delay must be positive"))
+  }
+}
 
 object JmsSinkConfig {
 
   val OptionMessageFormat = "jms.sink.messageFormat"
-  val OptionNumPartitions = "jms.sink.throttlingDelayMs"
+  val OptionThrottlingDelayMs = "jms.sink.throttlingDelayMs"
 
   def fromOptions(options: CaseInsensitiveConfigMap, connection: Option[JmsConnectionConfig] = None): JmsSinkConfig = {
-    JmsSinkConfig(
+    val config = JmsSinkConfig(
       connection.getOrElse(JmsConnectionConfig.fromOptions(options)),
       options.getRequired[MessageFormat](OptionMessageFormat),
-      options.getOptional[Int](OptionNumPartitions),
+      options.getOptional[Int](OptionThrottlingDelayMs),
     )
+    config.validate()
+    config
   }
 }

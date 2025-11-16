@@ -43,6 +43,7 @@ object JmsWriteBuilder {
       extends StreamingDataWriterFactory {
 
     private val fromInternalRow = ExpressionEncoder(schema).resolveAndBind().createDeserializer()
+
     private val valueFieldType = schema.find(_.name == SourceSchema.FieldValue).map(_.dataType) match {
       case Some(t) => t
       case None    => throw new RuntimeException("Missing value type")

@@ -20,7 +20,7 @@ import org.apache.spark.sql.util.CaseInsensitiveStringMap
 
 import java.util.concurrent.atomic.AtomicBoolean
 import javax.annotation.concurrent.GuardedBy
-import scala.collection.mutable.{ArrayBuffer, ListBuffer}
+import scala.collection.mutable.ArrayBuffer
 import scala.reflect.ClassTag
 
 class JmsScanBuilder(options: CaseInsensitiveStringMap) extends ScanBuilder {
@@ -74,6 +74,9 @@ object JmsScanBuilder {
 
     @GuardedBy("this")
     private var previousOffset: LongOffset = LongOffset(-1L)
+
+    @GuardedBy("this")
+    private var stopFlag: Boolean = false
 
     private val initialized: AtomicBoolean = new AtomicBoolean(false)
 
@@ -139,7 +142,10 @@ object JmsScanBuilder {
       }
     }
 
-    override def stop(): Unit = logInfo("Stopping JMS source ...")
+    override def stop(): Unit = synchronized {
+      logInfo("Stopping JMS source ...")
+      stopFlag = true
+    }
 
     override def deserializeOffset(json: String): Offset = LongOffset(json.toLong)
 
@@ -147,20 +153,20 @@ object JmsScanBuilder {
 
     private def initialize(): Unit = synchronized {
       val provider = ConnectionFactoryProvider.createInstance(config.connection.factoryProvider)
-      val client: JmsSourceClient = JmsSourceClient(provider, config.connection)
-      val receiverTask = new ReceiverTask(client, config.bufferSize, config.receiveTimeoutMs, config.logIntervalMs) {
+      val client = JmsSourceClient(provider, config.connection, transacted = true)
+      val receiverTask = new ReceiverTask(client, config.bufferSize, config.receiveTimeoutMs, config.commitIntervalMs) {
 
-        override protected def updateLog(buffer: ListBuffer[Message]): Unit = JmsMicroBatchStream.this.synchronized {
+        override protected def shouldStop(): Boolean = JmsMicroBatchStream.this.synchronized {
+          JmsMicroBatchStream.this.stopFlag
+        }
+
+        override protected def walCommit(messages: Array[Message]): Unit = JmsMicroBatchStream.this.synchronized {
           currentOffset += 1
 
           logInfo(s"Writing data to the WAL for offset $currentOffset ...")
-          val records = buffer.map(LogEntry.fromMessage[T])
-          metadataLog.add(currentOffset.offset, records.toArray)
+          val records = messages.map(LogEntry.fromMessage[T])
+          metadataLog.add(currentOffset.offset, records)
           logInfo(s"Updated the WAL for offset $currentOffset")
-
-          logInfo(s"Acknowledging ${buffer.length} messages ...")
-          buffer.last.acknowledge()
-          buffer.clear()
         }
 
         override protected def reportException(exception: Throwable): Unit = JmsMicroBatchStream.this.synchronized {
