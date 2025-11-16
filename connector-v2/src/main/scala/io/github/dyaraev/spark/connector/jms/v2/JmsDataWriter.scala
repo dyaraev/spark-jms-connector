@@ -8,8 +8,8 @@ import org.apache.spark.sql.catalyst.InternalRow
 import org.apache.spark.sql.connector.write.{DataWriter, WriterCommitMessage}
 
 import scala.annotation.tailrec
-import scala.util.{Failure, Success, Try}
 import scala.util.control.NonFatal
+import scala.util.{Failure, Success, Try}
 
 trait JmsDataWriter[T] extends DataWriter[InternalRow] with Serializable with Logging {
 
@@ -49,7 +49,7 @@ trait JmsDataWriter[T] extends DataWriter[InternalRow] with Serializable with Lo
   @tailrec
   private def sendMessage(f: JmsSinkClient => Unit, attempt: Int): Unit = {
     Try(f(getOrCreateClient())) match {
-      case Success(_) =>
+      case Success(_)           =>
       case Failure(NonFatal(e)) =>
         if (attempt <= JmsDataWriter.MaxSendAttempts) {
           logError(s"Error sending message (attempt=$attempt), retrying ...", e)
