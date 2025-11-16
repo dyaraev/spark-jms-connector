@@ -33,7 +33,7 @@ jobs:
     - name: Configure workflow
       id: configure
       run: |
-        export VERSION=$(sbt "print version" | tail -n 1 | xargs)
+        VERSION=$(sbt "print version" | tail -n 1 | xargs)
         echo "version=$VERSION" >> $GITHUB_OUTPUT
 
     - name: Test version correctness
