@@ -40,6 +40,10 @@ jobs:
       run: |
         echo "Version is: ${{ steps.configure.outputs.version }}"
 
+    - name: Debug step outputs
+      run: |
+        echo "Output: ${{ toJson(steps.configure.outputs) }}"
+
 #    - name: Run checks
 #      if: ${{ github.event_name == 'pull_request' }}
 #      run: sbt compile scalafmtCheck "scalafix --check" assembly
