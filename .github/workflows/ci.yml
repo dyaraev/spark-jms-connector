@@ -34,8 +34,7 @@ jobs:
       id: configure
       run: |
         export VERSION=$(sbt "print version" | tail -n 1 | xargs)
-        echo "$VERSION"
-        echo "version=$VERSION" >> GITHUB_OUTPUT
+        echo "version=$VERSION" >> $GITHUB_OUTPUT
 
     - name: Test version correctness
       run: |
