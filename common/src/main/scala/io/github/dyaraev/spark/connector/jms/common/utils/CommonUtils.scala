@@ -2,9 +2,11 @@ package io.github.dyaraev.spark.connector.jms.common.utils
 
 import org.apache.spark.internal.Logging
 
+import scala.util.control.NonFatal
+
 object CommonUtils extends Logging {
 
-  def logException(message: String): PartialFunction[Throwable, Unit] = { case e: Throwable =>
+  def logException(message: String): PartialFunction[Throwable, Unit] = { case NonFatal(e) =>
     logError(message, e)
   }
 

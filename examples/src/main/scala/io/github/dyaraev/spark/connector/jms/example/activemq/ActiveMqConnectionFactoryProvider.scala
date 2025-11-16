@@ -1,4 +1,4 @@
-package io.github.dyaraev.spark.connector.jms.activemq
+package io.github.dyaraev.spark.connector.jms.example.activemq
 
 import io.github.dyaraev.spark.connector.jms.common.ConnectionFactoryProvider
 import io.github.dyaraev.spark.connector.jms.common.config.CaseInsensitiveConfigMap

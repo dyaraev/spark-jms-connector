@@ -8,6 +8,8 @@ import org.apache.spark.sql.catalyst.InternalRow
 import org.apache.spark.sql.connector.write.{DataWriter, WriterCommitMessage}
 
 import scala.annotation.tailrec
+import scala.util.{Failure, Success, Try}
+import scala.util.control.NonFatal
 
 trait JmsDataWriter[T] extends DataWriter[InternalRow] with Serializable with Logging {
 
@@ -29,35 +31,66 @@ trait JmsDataWriter[T] extends DataWriter[InternalRow] with Serializable with Lo
 
   override def commit(): WriterCommitMessage = {
     val message = JmsCommitMessage(counter)
-    counter = 0
+    commitJmsTransaction()
     message
   }
 
-  override def close(): Unit = closeClientIfExists()
+  override def close(): Unit = {
+    closeClientIfExists()
+  }
 
-  override def abort(): Unit = {}
+  override def abort(): Unit = {
+    rollbackJmsTransaction()
+    closeClientIfExists()
+  }
 
   protected def sendMessage(f: JmsSinkClient => Unit): Unit = sendMessage(f, attempt = 1)
 
   @tailrec
   private def sendMessage(f: JmsSinkClient => Unit, attempt: Int): Unit = {
-    try f(getOrCreateClient())
-    catch {
-      case e: Throwable =>
+    Try(f(getOrCreateClient())) match {
+      case Success(_) =>
+      case Failure(NonFatal(e)) =>
         if (attempt <= JmsDataWriter.MaxSendAttempts) {
           logError(s"Error sending message (attempt=$attempt), retrying ...", e)
-          Thread.sleep(attempt * JmsDataWriter.MinRetryInterval)
+          Thread.sleep((scala.math.pow(2, attempt.toDouble) * JmsDataWriter.MinRetryInterval).toLong)
           closeClientIfExists()
           sendMessage(f, attempt + 1)
         } else {
           throw new RuntimeException("Unable to send message", e)
         }
+      case Failure(e) => throw e
+    }
+  }
+
+  private def commitJmsTransaction(): Unit = {
+    if (client != null && counter > 0) {
+      logInfo(s"Committing $counter JMS messages")
+      try {
+        client.commit()
+        counter = 0
+      } catch {
+        case NonFatal(e) =>
+          logError(s"Failed to commit JMS transaction", e)
+          throw new RuntimeException("JMS commit failed", e)
+      }
+    }
+  }
+
+  private def rollbackJmsTransaction(): Unit = {
+    if (client != null && counter > 0) {
+      logWarning("Aborting JMS transaction")
+      try {
+        client.rollback()
+      } catch {
+        case NonFatal(e) => logError("Error rolling back JMS transaction", e)
+      }
     }
   }
 
   private def getOrCreateClient(): JmsSinkClient = {
     if (client == null) {
-      client = JmsSinkClient(config.connection, None)
+      client = JmsSinkClient(config.connection, transacted = true)
     }
     client
   }

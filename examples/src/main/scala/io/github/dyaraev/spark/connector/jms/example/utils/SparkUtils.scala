@@ -1,32 +1,29 @@
 package io.github.dyaraev.spark.connector.jms.example.utils
 
-import org.apache.hadoop.fs.FileSystem
 import org.apache.spark.SparkConf
 import org.apache.spark.sql.SparkSession
+
+import scala.util.Try
 
 object SparkUtils {
 
   private val sparkConf = new SparkConf()
 //    .set("spark.sql.extensions", "io.delta.sql.DeltaSparkSessionExtension")
 //    .set("spark.sql.catalog.spark_catalog", "org.apache.spark.sql.delta.catalog.DeltaCatalog")
-//    .set("spark.cleaner.referenceTracking.cleanCheckpoints", "true")
-//    .set("spark.rpc.message.maxSize", "512") // Default is 128 MB, increase to 512 MB
-//    .set("spark.driver.maxResultSize", "2g")
 
-  def getOrCreateSession(master: String = "local[2]", writeChecksumFiles: Boolean = false): SparkSession = {
-    val spark = SparkSession
+  def withSparkSession[T](master: String = "local[2]")(f: SparkSession => Try[T]): Try[T] = {
+    getOrCreateSession(master).flatMap { spark =>
+      val result = Try(f(spark).get)
+      Try(spark.stop())
+      result
+    }
+  }
+
+  private def getOrCreateSession(master: String): Try[SparkSession] = Try {
+    SparkSession
       .builder()
       .config(sparkConf)
       .master(master)
       .getOrCreate()
-
-    if (!writeChecksumFiles) disableChecksumFiles(spark)
-    spark
-  }
-
-  private def disableChecksumFiles(spark: SparkSession): Unit = {
-    val hadoopConf = spark.sparkContext.hadoopConfiguration
-    val fs = FileSystem.get(hadoopConf)
-    fs.setWriteChecksum(false)
   }
 }
