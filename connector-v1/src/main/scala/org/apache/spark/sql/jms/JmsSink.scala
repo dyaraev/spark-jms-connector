@@ -83,7 +83,7 @@ class JmsSink(config: JmsSinkConfig) extends Sink with Serializable with Logging
       case Failure(NonFatal(e)) =>
         if (attempt <= MaxSendAttempts) {
           logError(s"Error sending message (attempt=$attempt), retrying ...", e)
-          Thread.sleep((scala.math.pow(2, attempt) * MinRetryInterval).toLong)
+          Thread.sleep((scala.math.pow(2, attempt.toDouble) * MinRetryInterval).toLong)
           closeClientIfExists()
           sendMessage(f, attempt + 1)
         } else {
@@ -108,14 +108,14 @@ class JmsSink(config: JmsSinkConfig) extends Sink with Serializable with Logging
 
   private def getOrCreateWriter(): JmsSinkClient = {
     if (client == null) {
-      client = JmsSinkClient(config.connection, None, transacted = true)
+      client = JmsSinkClient(config.connection, transacted = true)
     }
     client
   }
 
   private def closeClientIfExists(): Unit = {
     if (client != null) {
-      client.close()
+      client.closeSilently()
       client = null
     }
   }

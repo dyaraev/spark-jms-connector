@@ -42,12 +42,11 @@ object JmsSinkClient extends Logging {
 
   def apply(
       config: JmsConnectionConfig,
-      listener: Option[ExceptionListener],
       transacted: Boolean,
   ): JmsSinkClient = {
     val provider = ConnectionFactoryProvider.createInstance(config.factoryProvider)
     val factory = provider.getConnectionFactory(config.brokerOptions)
-    JmsSinkClient(factory, config.queueName, config.username, config.password, listener, transacted)
+    JmsSinkClient(factory, config.queueName, config.username, config.password, transacted)
   }
 
   def apply(
@@ -55,11 +54,10 @@ object JmsSinkClient extends Logging {
       queueName: String,
       username: Option[String] = None,
       password: Option[String] = None,
-      listener: Option[ExceptionListener] = None,
       transacted: Boolean = true,
   ): JmsSinkClient = {
     val sessionMode = if (transacted) Session.SESSION_TRANSACTED else Session.AUTO_ACKNOWLEDGE
-    val connection = createConnection(factory, username, password, listener)
+    val connection = createConnection(factory, username, password)
     val session = connection.createSession(sessionMode)
     val queue = session.createQueue(queueName)
     val producer = session.createProducer(queue)
@@ -70,14 +68,12 @@ object JmsSinkClient extends Logging {
       factory: ConnectionFactory,
       username: Option[String],
       password: Option[String],
-      listener: Option[ExceptionListener] = None,
   ): Connection = {
     logInfo(s"Creating JMS connection")
     val connection = username match {
       case Some(username) => factory.createConnection(username, password.orNull)
       case None           => factory.createConnection()
     }
-    listener.foreach(connection.setExceptionListener)
     connection.start()
     connection
   }

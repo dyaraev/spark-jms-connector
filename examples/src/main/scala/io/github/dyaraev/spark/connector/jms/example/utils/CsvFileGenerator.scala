@@ -75,8 +75,8 @@ object CsvFileGenerator {
       val result = Try(f(generator.schema).get)
 
       stopRef.set(true)
-      Try(Await.ready(future, WaitTimeout))
-        .recover { case e => logger.warn("Message receiver execution error", e) }
+      Try[Unit](Await.ready(future, WaitTimeout))
+        .recover { case e: Throwable => logger.warn("Message receiver execution error", e) }
 
       result
     }

@@ -26,7 +26,7 @@ class JmsReceiverJob(config: JmsReceiverJobConfig) {
       .option(JmsConnectionConfig.OptionFactoryProvider, classOf[ActiveMqConnectionFactoryProvider].getName)
       .option(JmsSourceConfig.OptionMessageFormat, MessageFormat.TextFormat.name)
       .option(JmsSourceConfig.OptionCommitIntervalMs, config.commitInterval.toMillis)
-      .option(JmsSourceConfig.OptionNumPartitions, config.numPartitions)
+      .option(JmsSourceConfig.OptionNumPartitions, config.numPartitions.toString)
       .let(r => config.receiveTimeout.fold(r)(t => r.option(JmsSourceConfig.OptionReceiveTimeoutMs, t.toMillis)))
       .option(ActiveMqConfig.OptionsJmsBrokerAddress, config.brokerAddress.toString)
       .load()

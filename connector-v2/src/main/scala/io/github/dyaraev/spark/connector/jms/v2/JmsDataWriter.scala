@@ -53,7 +53,7 @@ trait JmsDataWriter[T] extends DataWriter[InternalRow] with Serializable with Lo
       case Failure(NonFatal(e)) =>
         if (attempt <= JmsDataWriter.MaxSendAttempts) {
           logError(s"Error sending message (attempt=$attempt), retrying ...", e)
-          Thread.sleep((scala.math.pow(2, attempt) * JmsDataWriter.MinRetryInterval).toLong)
+          Thread.sleep((scala.math.pow(2, attempt.toDouble) * JmsDataWriter.MinRetryInterval).toLong)
           closeClientIfExists()
           sendMessage(f, attempt + 1)
         } else {
@@ -90,14 +90,14 @@ trait JmsDataWriter[T] extends DataWriter[InternalRow] with Serializable with Lo
 
   private def getOrCreateClient(): JmsSinkClient = {
     if (client == null) {
-      client = JmsSinkClient(config.connection, None, transacted = true)
+      client = JmsSinkClient(config.connection, transacted = true)
     }
     client
   }
 
   private def closeClientIfExists(): Unit = {
     if (client != null) {
-      client.close()
+      client.closeSilently()
       client = null
     }
   }

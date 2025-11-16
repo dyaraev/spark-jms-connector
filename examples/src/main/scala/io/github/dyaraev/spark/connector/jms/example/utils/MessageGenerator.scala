@@ -57,8 +57,8 @@ object MessageGenerator {
       val result = Try(f().get)
 
       stopRef.set(true)
-      Try(Await.ready(Future.sequence(futures), WaitTimeout))
-        .recover { case e => logger.warn("Message receiver execution error", e) }
+      Try[Unit](Await.ready(Future.sequence(futures), WaitTimeout))
+        .recover { case e: Throwable => logger.warn("Message receiver execution error", e) }
 
       result
     }
