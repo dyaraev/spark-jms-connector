@@ -13,8 +13,8 @@ import org.apache.spark.sql.jms.JmsSink.{MaxSendAttempts, MinRetryInterval}
 import org.apache.spark.sql.types.{BinaryType, DataType, StringType}
 
 import scala.annotation.tailrec
-import scala.util.{Failure, Success, Try}
 import scala.util.control.NonFatal
+import scala.util.{Failure, Success, Try}
 
 class JmsSink(config: JmsSinkConfig) extends Sink with Serializable with Logging {
 
@@ -79,7 +79,7 @@ class JmsSink(config: JmsSinkConfig) extends Sink with Serializable with Logging
   @tailrec
   private def sendMessage(f: JmsSinkClient => Unit, attempt: Int = 1): Unit = {
     Try(f(getOrCreateWriter())) match {
-      case Success(_) =>
+      case Success(_)           =>
       case Failure(NonFatal(e)) =>
         if (attempt <= MaxSendAttempts) {
           logError(s"Error sending message (attempt=$attempt), retrying ...", e)
