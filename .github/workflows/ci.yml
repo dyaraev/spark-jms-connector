@@ -1,11 +1,11 @@
-name: Build and Publish
+name: Build and Release
 
 on:
   push:
-    branches: [ "master" ]
+    branches: [ "main" ]
     tags: [ "**" ]
   pull_request:
-    branches: [ "master" ]
+    branches: [ "main" ]
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
@@ -37,14 +37,11 @@ jobs:
         VERSION=$(sbt -Dsbt.log.noformat=true "print version" | tail -n 1 | xargs)
         echo "version=$VERSION" >> $GITHUB_OUTPUT
 
-    - name: Run checks
-      if: ${{ github.event_name == 'pull_request' }}
+    - name: Run checks and build JARs
       run: sbt compile scalafmtCheck "scalafix --check" assembly
 
-    - name: Assemble JARs
-      run: sbt assembly
-
     - name: Upload JARs for connector-v1
+      if: ${{ github.event_name == 'push' && github.ref_name == 'main' }}
       uses: actions/upload-artifact@v4
       with:
         name: spark-jms-connector-v1-${{ steps.configure.outputs.version }}.jar
@@ -52,6 +49,7 @@ jobs:
         if-no-files-found: error
 
     - name: Upload JARs for connector-v2
+      if: ${{ github.event_name == 'push' && github.ref_name == 'main' }}
       uses: actions/upload-artifact@v4
       with:
         name: spark-jms-connector-v2-${{ steps.configure.outputs.version }}.jar
