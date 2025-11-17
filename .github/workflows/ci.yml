@@ -56,8 +56,8 @@ jobs:
       with:
         name: artifacts
         path: |
-          - connector-v1/target/scala-2.12/spark-jms-connector-v1-${{ steps.configure.outputs.version }}.jar
-          - connector-v2/target/scala-2.12/spark-jms-connector-v2-${{ steps.configure.outputs.version }}.jar
+          connector-v1/target/scala-2.12/spark-jms-connector-v1-${{ steps.configure.outputs.version }}.jar
+          connector-v2/target/scala-2.12/spark-jms-connector-v2-${{ steps.configure.outputs.version }}.jar
 
 #    - name: Publish JARs
 #      if: ${{ github.event_name == 'push' && startsWith(github.ref, 'refs/tags/') }}
