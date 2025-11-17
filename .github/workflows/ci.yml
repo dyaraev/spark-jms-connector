@@ -55,7 +55,7 @@ jobs:
       uses: actions/upload-artifact@v4
       with:
         name: artifacts
-        paths: |
+        path: |
           - connector-v1/target/scala-2.12/spark-jms-connector-v2-${{ steps.configure.outputs.version }}.jar
           - connector-v2/target/scala-2.12/spark-jms-connector-v2-${{ steps.configure.outputs.version }}.jar
 
