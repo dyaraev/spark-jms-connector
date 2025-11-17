@@ -3,8 +3,13 @@ name: Build and Publish
 on:
   push:
     branches: [ "master" ]
-  # pull_request:
-  #   branches: [ "master" ]
+    tags: [ "**" ]
+  pull_request:
+    branches: [ "master" ]
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 
 permissions:
   contents: read
@@ -26,8 +31,43 @@ jobs:
     - name: Setup sbt launcher
       uses: sbt/setup-sbt@v1
 
+    - name: Configure build
+      id: configure
+      run: |
+        VERSION=$(sbt -Dsbt.log.noformat=true "print version" | tail -n 1 | xargs)
+        echo "version=$VERSION" >> $GITHUB_OUTPUT
+
     - name: Run checks
-      run: sbt clean compile scalafmtCheck "scalafix --check"
-      # Optional: This step uploads information to the GitHub dependency graph and unblocking Dependabot alerts for the repository
+      if: ${{ github.event_name == 'pull_request' }}
+      run: sbt compile scalafmtCheck "scalafix --check" assembly
+
+    - name: Assemble JARs
+      run: sbt assembly
+
+    - name: Upload JARs for connector-v1
+      uses: actions/upload-artifact@v4
+      with:
+        name: spark-jms-connector-v1-${{ steps.configure.outputs.version }}.jar
+        path: connector-v1/target/scala-2.12/spark-jms-connector-v1-${{ steps.configure.outputs.version }}.jar
+        if-no-files-found: error
+
+    - name: Upload JARs for connector-v2
+      uses: actions/upload-artifact@v4
+      with:
+        name: spark-jms-connector-v2-${{ steps.configure.outputs.version }}.jar
+        path: connector-v2/target/scala-2.12/spark-jms-connector-v2-${{ steps.configure.outputs.version }}.jar
+        if-no-files-found: error
+
+    - name: Create release
+      if: ${{ github.event_name == 'push' && startsWith(github.ref, 'refs/tags/') && steps.configure.outputs.version == format('v{0}', github.ref_name) }}
+      env:
+        GITHUB_TOKEN: ${{ secrets.GH_TOKEN }}
+      run: |
+        gh release create "${{ github.ref_name }}" \
+          connector-v1/target/scala-2.12/spark-jms-connector-v1-${{ steps.configure.outputs.version }}.jar \
+          connector-v2/target/scala-2.12/spark-jms-connector-v2-${{ steps.configure.outputs.version }}.jar \
+          --verify-tag --generate-notes
+
+    # Optional: This step uploads information to the GitHub dependency graph and unblocking Dependabot alerts for the repository
     # - name: Upload dependency graph
     #   uses: scalacenter/sbt-dependency-submission@ab086b50c947c9774b70f39fc7f6e20ca2706c91
