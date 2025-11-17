@@ -1,4 +1,4 @@
-name: Build and Publish
+name: Build and Release
 
 on:
   push:
@@ -37,7 +37,7 @@ jobs:
         VERSION=$(sbt -Dsbt.log.noformat=true "print version" | tail -n 1 | xargs)
         echo "version=$VERSION" >> $GITHUB_OUTPUT
 
-    - name: Run checks and builds JARs
+    - name: Run checks and build JARs
       run: sbt compile scalafmtCheck "scalafix --check" assembly
 
     - name: Upload JARs for connector-v1
