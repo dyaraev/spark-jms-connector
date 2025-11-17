@@ -4,7 +4,9 @@ inThisBuild(
   List(
     organization := "io.github.dyaraev",
     description := "JMS Connector for Apache Spark",
+    developers := List(Developer("dyaraev", "", "", url("https://github.com/dyaraev"))),
     homepage := Some(url("https://github.com/dyaraev/spark-jms-connector")),
+    versionScheme := Some("early-semver"),
     scalaVersion := "2.12.20",
     semanticdbEnabled := true,
     semanticdbVersion := scalafixSemanticdb.revision,
