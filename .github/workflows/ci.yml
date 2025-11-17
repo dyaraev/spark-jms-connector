@@ -54,13 +54,13 @@ jobs:
     - name: Upload JAR for connector-v1
       uses: actions/upload-artifact@v4
       with:
-        name: connector-v1
+        name: spark-jms-connector-v1-${{ steps.configure.outputs.version }}.jar
         path: connector-v1/target/scala-2.12/spark-jms-connector-v1-${{ steps.configure.outputs.version }}.jar
 
     - name: Upload JAR for connector-v2
       uses: actions/upload-artifact@v4
       with:
-        name: connector-v2
+        name: spark-jms-connector-v2-${{ steps.configure.outputs.version }}.jar
         path: connector-v2/target/scala-2.12/spark-jms-connector-v2-${{ steps.configure.outputs.version }}.jar
 
 #    - name: Publish JARs
