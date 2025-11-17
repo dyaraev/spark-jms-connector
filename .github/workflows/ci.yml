@@ -33,7 +33,7 @@ jobs:
     - name: Configure workflow
       id: configure
       run: |
-        VERSION=$(sbt "print version" | tail -n 1 | xargs)
+        VERSION=$(sbt -Dsbt.log.noformat=true "print version" | tail -n 1 | xargs)
         echo $VERSION
         echo "version=$VERSION" >> $GITHUB_OUTPUT
 
