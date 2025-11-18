@@ -29,11 +29,15 @@ inThisBuild(
 lazy val assemblySettings = Seq(
   assembly / assemblyJarName := s"spark-jms-${name.value}-${version.value}.jar",
   assembly / assemblyOption ~= { _.withIncludeScala(false) },
+  assembly / assemblyMergeStrategy := {
+    case x if x.endsWith("module-info.class") => MergeStrategy.discard
+    case x                                    => (assembly / assemblyMergeStrategy).value(x)
+  },
 )
 
 lazy val root = (project in file("."))
   .disablePlugins(AssemblyPlugin)
-  .aggregate(common, connectorV1, connectorV2, examples)
+  .aggregate(common, connectorV1, connectorV2, providerActiveMq, examples)
 
 lazy val common = (project in file("common"))
   .disablePlugins(AssemblyPlugin)

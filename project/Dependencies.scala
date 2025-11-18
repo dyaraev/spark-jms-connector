@@ -22,7 +22,6 @@ object Dependencies {
   )
 
   lazy val providerActiveMq = Seq(
-    "jakarta.jms" % "jakarta.jms-api" % jakartaJmsVersion,
     "org.apache.activemq" % "activemq-broker" % activeMqVersion excludeAll (
       ExclusionRule("com.fasterxml.jackson.module", "jackson-module-scala"),
       ExclusionRule("com.fasterxml.jackson.core", "jackson-databind"),
