@@ -63,7 +63,7 @@ lazy val connectorV2 = (project in file("connector-v2"))
   )
 
 lazy val providerActiveMq = (project in file("provider-activemq"))
-  .dependsOn(common)
+  .dependsOn(common % Provided)
   .settings(
     name := "provider-activemq",
     assemblySettings,

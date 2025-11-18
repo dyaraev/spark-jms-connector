@@ -25,10 +25,12 @@ object Dependencies {
     "org.apache.activemq" % "activemq-broker" % activeMqVersion excludeAll (
       ExclusionRule("com.fasterxml.jackson.module", "jackson-module-scala"),
       ExclusionRule("com.fasterxml.jackson.core", "jackson-databind"),
+      ExclusionRule("org.slf4j", "slf4j-api"),
     ),
     "org.apache.activemq" % "activemq-kahadb-store" % activeMqVersion excludeAll (
       ExclusionRule("com.fasterxml.jackson.module", "jackson-module-scala"),
       ExclusionRule("com.fasterxml.jackson.core", "jackson-databind"),
+      ExclusionRule("org.slf4j", "slf4j-api"),
     ),
   )
 
