@@ -21,11 +21,8 @@ object Dependencies {
     "org.scalatest" %% "scalatest" % scalaTestVersion % Test,
   )
 
-  lazy val exampleDependencies = Seq(
+  lazy val providerActiveMq = Seq(
     "jakarta.jms" % "jakarta.jms-api" % jakartaJmsVersion,
-    "org.apache.spark" %% "spark-core" % sparkVersion,
-    "org.apache.spark" %% "spark-sql" % sparkVersion,
-    "org.apache.spark" %% "spark-streaming" % sparkVersion,
     "org.apache.activemq" % "activemq-broker" % activeMqVersion excludeAll (
       ExclusionRule("com.fasterxml.jackson.module", "jackson-module-scala"),
       ExclusionRule("com.fasterxml.jackson.core", "jackson-databind"),
@@ -34,6 +31,12 @@ object Dependencies {
       ExclusionRule("com.fasterxml.jackson.module", "jackson-module-scala"),
       ExclusionRule("com.fasterxml.jackson.core", "jackson-databind"),
     ),
+  )
+
+  lazy val exampleDependencies = Seq(
+    "org.apache.spark" %% "spark-core" % sparkVersion,
+    "org.apache.spark" %% "spark-sql" % sparkVersion,
+    "org.apache.spark" %% "spark-streaming" % sparkVersion,
     "com.typesafe.scala-logging" %% "scala-logging" % scalaLoggingVersion,
     "com.monovore" %% "decline-effect" % declineEffectVersion,
   )

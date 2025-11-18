@@ -58,9 +58,17 @@ lazy val connectorV2 = (project in file("connector-v2"))
     libraryDependencies ++= Dependencies.connectorDependencies,
   )
 
+lazy val providerActiveMq = (project in file("provider-activemq"))
+  .dependsOn(common)
+  .settings(
+    name := "provider-activemq",
+    assemblySettings,
+    libraryDependencies ++= Dependencies.providerActiveMq,
+  )
+
 lazy val examples = (project in file("examples"))
   .disablePlugins(AssemblyPlugin)
-  .dependsOn(common, connectorV1, connectorV2)
+  .dependsOn(common, connectorV1, connectorV2, providerActiveMq)
   .settings(
     name := "examples",
     run / fork := true,

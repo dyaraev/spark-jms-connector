@@ -1,7 +1,7 @@
 # Spark JMS Connector
 
 A JMS connector for Apache Spark that provides functionality for reading from and writing to JMS queues using Spark Structured Streaming.
-This is a fully functional implementation of Spark JMS connector, but it was created for educational purposes and has some limitations.
+This is a fully functional implementation of Spark JMS connector, but it was created for educational purposes and has some [limitations](#limitations-and-considerations).
 The main purpose of this project is to provide a working example of how to implement a JMS connector for Apache Spark.
 
 _Please read [the disclaimer](#disclaimer) below before using this connector._
@@ -31,7 +31,7 @@ _Please read [the disclaimer](#disclaimer) below before using this connector._
 - **Streaming Source Support**: Reads from JMS queues as Spark streaming sources.
 - **Streaming Sink Support**: Writes Spark streaming data to JMS destinations.
 - **Configurable Message Format**: Supports text and binary formats.
-- **At-Least-Once Delivery for Source**: Messages are acknowledged after being successfully stored using write-ahead logging.
+- **At-Least-Once Delivery for Source**: Messages are acknowledged after being successfully stored using a write-ahead log.
 - **Provider-Agnostic**: Works with any JMS-compliant messaging system (ActiveMQ, IBM MQ, etc.) but requires a corresponding implementation of `ConnectionFactoryProvider`.
 
 ## Project Structure
@@ -41,7 +41,8 @@ The project is organized into multiple modules:
 - **common**: Shared configuration and utilities
 - **connector-v1**: Connector implementation for Spark DataSourceV1 API
 - **connector-v2**: Connector implementation for Spark DataSourceV2 API
-- **examples**: Example applications demonstrating usage with an ActiveMQ implementation
+- **examples**: Example applications demonstrating usage with the provided ActiveMQ implementation
+- **provider-activemq**: Simple implementation of ConnectionFactoryProvider for ActiveMQ
 
 ## Requirements
 
@@ -73,7 +74,7 @@ val df = spark.readStream
   .format("jms-v2") // or "jms-v1" depending on the used implementation
   .option("jms.connection.queueName", "myQueue")
   .option("jms.connection.factoryProvider", "com.example.MyConnectionFactoryProvider")
-  // broker options for the provided connection factory implementation
+  // broker specific options for the provided connection factory implementation
   .option("jms.source.messageFormat", "text")
   .option("jms.source.receiveTimeoutMs", "1000")
   .option("jms.source.commitIntervalMs", "10000")
@@ -102,7 +103,7 @@ df.writeStream
   .format("jms-v2") // or "jms-v1" depending on the used implementation
   .option("jms.connection.queueName", "myQueue")
   .option("jms.connection.factoryProvider", "com.example.MyConnectionFactoryProvider")
-  // broker options for the provided connection factory implementation
+  // broker specific options for the provided connection factory implementation
   .option("jms.sink.messageFormat", "text")
   .option("checkpointLocation", "/tmp/checkpoint")
   .trigger(Trigger.ProcessingTime("10 seconds"))
@@ -144,10 +145,13 @@ class MyConnectionFactoryProvider extends ConnectionFactoryProvider {
 }
 ```
 
+As an example, the `provider-activemq` module offers a simple implementation of `ConnectionFactoryProvider` for ActiveMQ.
+
 ## Configuration Options
 
 The available broker configuration options depend on the implementation of `ConnectionFactoryProvider` being used. 
-Each broker provider defines its own set of options. For example, when using `ActiveMqConnectionFactoryProvider` from the `examples` module, you can configure the broker URL:
+Each broker provider defines its own set of options. 
+For example, when using `ActiveMqConnectionFactoryProvider` from the `provider-activemq` module, you can configure the broker URL:
 
 ```scala
 df.writeStream
@@ -215,7 +219,6 @@ sbt "examples/runMain io.github.dyaraev.spark.connector.jms.example.ExampleApp r
 ```bash
 # Run an ActiveMQ broker, a test file generator, an example Spark job with the JMS sink and a test message reader
 sbt "examples/runMain io.github.dyaraev.spark.connector.jms.example.ExampleApp sender-job --workingDirectory /tmp/spark-sender-job"
-
 ```
 
 You can play with the example applications by changing the configuration options.
@@ -228,13 +231,14 @@ Executing examples in an IDE may require the following JVM option to be set: `--
 The connector is still in development and may contain bugs and limitations. 
 Since it's mostly a proof-of-concept, it's not recommended for production use.
 Some of the limitations include:
-- JMS connections are not pooled
-- No full support of the JMS 2.0 specification
-- Receiving messages from a queue is done in a driver in a single threaded manner, so it may affect performance in distributed environments
-- Sending messages is done in executors, so every executor task creates its own connection
-- The number of connections used by the sink component depends on the number of partitions
-- Connections in the sink component are created for each batch and not reused
-- The connector uses a fail-fast strategy, so no proper retry logic for failed writes is implemented
+- JMS connections are not pooled.
+- No full support of the JMS 2.0 specification.
+- Receiving messages from a queue is done in a driver in a single threaded manner, so it may affect performance in distributed environments.
+- Sending messages is done in executors, so every executor task creates its own connection.
+- The number of connections used by the sink component depends on the number of partitions.
+- Connections in the sink component are created for each batch and not reused.
+- The connector uses a fail-fast strategy, so no proper retry logic for failed writes is implemented.
+- Messages are written to the write-ahead log using Java serialization, which may be non-optimal, especially for large messages.
 
 ## Contributing
 

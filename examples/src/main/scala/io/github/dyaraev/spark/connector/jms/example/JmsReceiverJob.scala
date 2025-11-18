@@ -2,9 +2,9 @@ package io.github.dyaraev.spark.connector.jms.example
 
 import io.github.dyaraev.spark.connector.jms.common.config.{JmsConnectionConfig, JmsSourceConfig, MessageFormat}
 import io.github.dyaraev.spark.connector.jms.example.JmsReceiverJob.JmsReceiverJobConfig
-import io.github.dyaraev.spark.connector.jms.example.activemq.{ActiveMqConfig, ActiveMqConnectionFactoryProvider}
 import io.github.dyaraev.spark.connector.jms.example.utils.ActiveMqBroker.ActiveMqAddress
 import io.github.dyaraev.spark.connector.jms.example.utils.Implicits.LetSyntax
+import io.github.dyaraev.spark.connector.jms.provider.activemq.{ActiveMqConfig, ActiveMqConnectionFactoryProvider}
 import org.apache.spark.sql.SparkSession
 import org.apache.spark.sql.streaming.{StreamingQuery, Trigger}
 
