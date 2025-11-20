@@ -7,11 +7,12 @@ object Dependencies {
   private val scalaTestVersion = "3.2.19"
   private val sparkVersion = "3.5.7"
 
-  // Example dependencies
+  // Provider dependencies
   private val activeMqVersion = "6.2.0"
-  //private val deltaVersion = "3.2.1"
-  private val scalaLoggingVersion = "3.9.6"
+
+  // Example dependencies
   private val declineEffectVersion = "2.5.0"
+  private val scalaLoggingVersion = "3.9.6"
 
   lazy val connectorDependencies = Seq(
     "jakarta.jms" % "jakarta.jms-api" % jakartaJmsVersion,
