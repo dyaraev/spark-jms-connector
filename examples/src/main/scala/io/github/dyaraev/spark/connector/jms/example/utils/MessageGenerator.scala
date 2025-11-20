@@ -11,6 +11,43 @@ import scala.concurrent.duration._
 import scala.concurrent.{Await, Future}
 import scala.util.Try
 
+object MessageGenerator {
+
+  private val logger = Logger(getClass)
+
+  private val WaitTimeout = 30.seconds
+
+  def withGenerator(amqAddress: ActiveMqAddress, queue: String, sendInterval: Duration, logInterval: Duration)(
+      f: () => Try[Unit]
+  ): Try[Unit] = {
+    val stopRef = new AtomicBoolean(false)
+    val counterRef = new AtomicInteger(0)
+    newGenerator(amqAddress, queue).flatMap { generator =>
+      val futures = Seq(
+        generator.send(sendInterval, counterRef, stopRef),
+        generator.log(logInterval, counterRef, stopRef),
+      )
+
+      val result = Try(f().get)
+
+      stopRef.set(true)
+      Try[Unit](Await.ready(Future.sequence(futures), WaitTimeout))
+        .recover { case e => logger.warn("Message receiver execution error", e) }
+
+      result
+    }
+  }
+
+  private def newGenerator(amqAddress: ActiveMqAddress, queue: String): Try[MessageGenerator] = {
+    createSink(amqAddress, queue).map(source => new MessageGenerator(source))
+  }
+
+  private def createSink(address: ActiveMqAddress, queue: String): Try[JmsSinkClient] = Try {
+    val factory = new ActiveMQConnectionFactory(address.toString)
+    JmsSinkClient(factory, queue, transacted = false)
+  }
+}
+
 private class MessageGenerator(sink: JmsSinkClient) {
 
   import MessageGenerator.logger
@@ -34,42 +71,5 @@ private class MessageGenerator(sink: JmsSinkClient) {
       Try(Thread.sleep(interval.toMillis))
         .recover { case e => logger.error("Error while sleeping", e) }
     }
-  }
-}
-
-object MessageGenerator {
-
-  private val logger = Logger(getClass)
-
-  private val WaitTimeout = 30.seconds
-
-  def withGenerator(amqAddress: ActiveMqAddress, queue: String, sendInterval: Duration, logInterval: Duration)(
-      f: () => Try[Unit]
-  ): Try[Unit] = {
-    val stopRef = new AtomicBoolean(false)
-    val counterRef = new AtomicInteger(0)
-    newGenerator(amqAddress, queue).flatMap { generator =>
-      val futures = Seq(
-        generator.send(sendInterval, counterRef, stopRef),
-        generator.log(logInterval, counterRef, stopRef),
-      )
-
-      val result = Try(f().get)
-
-      stopRef.set(true)
-      Try[Unit](Await.ready(Future.sequence(futures), WaitTimeout))
-        .recover { case e: Throwable => logger.warn("Message receiver execution error", e) }
-
-      result
-    }
-  }
-
-  private def newGenerator(amqAddress: ActiveMqAddress, queue: String): Try[MessageGenerator] = {
-    createSink(amqAddress, queue).map(source => new MessageGenerator(source))
-  }
-
-  private def createSink(address: ActiveMqAddress, queue: String): Try[JmsSinkClient] = Try {
-    val factory = new ActiveMQConnectionFactory(address.toString)
-    JmsSinkClient(factory, queue, transacted = false)
   }
 }

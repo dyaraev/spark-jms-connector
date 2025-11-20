@@ -15,51 +15,6 @@ import scala.concurrent.{Await, Future}
 import scala.io.Source
 import scala.util.{Success, Try}
 
-private class CsvFileGenerator(outputPath: Path, fields: List[GenStringField], runId: String, numRecords: Int) {
-
-  import CsvFileGenerator.logger
-
-  private val schema: StructType = StructType(fields.map(f => StructField(f.name, f.sparkType)))
-
-  private def runWithInterval(interval: Duration, stopRef: AtomicBoolean): Future[Unit] = Future {
-    var counter = 0
-    val header = createCsvLine(fields.map(_.name))
-    while (!stopRef.get()) {
-      generateBatch(counter)
-        .flatMap(records => writeToFile(header :: records, counter))
-        .recover { case e => logger.error(s"Failed to generate file", e) }
-      Try(Thread.sleep(interval.toMillis))
-        .recover { case e => logger.error("Error while sleeping", e) }
-      counter += 1
-    }
-  }
-
-  private def generateBatch(fileNum: Int): Try[List[String]] = {
-    (0 until numRecords).toList.traverse(generateRow(fileNum, _))
-  }
-
-  private def generateRow(fileNum: Int, rowNum: Int): Try[String] = {
-    fields.map(_.generate(fileNum, rowNum)).sequence.map(createCsvLine)
-  }
-
-  private def writeToFile(lines: List[String], fileNum: Int): Try[Unit] = Try {
-    for {
-      path <- resolveFilePath(fileNum)
-      content = lines.mkString("", "\n", "\n")
-      result <- Try(Files.writeString(path, content))
-      _ = logger.info(s"Generated file: $path")
-    } yield result
-  }
-
-  private def resolveFilePath(counter: Int): Try[Path] = Try {
-    outputPath.resolve(f"$runId-$counter%06d.csv")
-  }
-
-  private def createCsvLine(values: List[String]): String = {
-    values.mkString(",")
-  }
-}
-
 object CsvFileGenerator {
 
   private val logger = Logger(getClass)
@@ -76,7 +31,7 @@ object CsvFileGenerator {
 
       stopRef.set(true)
       Try[Unit](Await.ready(future, WaitTimeout))
-        .recover { case e: Throwable => logger.warn("Message receiver execution error", e) }
+        .recover { case e => logger.warn("Message receiver execution error", e) }
 
       result
     }
@@ -124,5 +79,50 @@ object CsvFileGenerator {
 
   private def createOutputDirectory(directory: Path): Try[Unit] = Try {
     if (!Files.exists(directory)) Files.createDirectories(directory)
+  }
+}
+
+private class CsvFileGenerator(outputPath: Path, fields: List[GenStringField], runId: String, numRecords: Int) {
+
+  import CsvFileGenerator.logger
+
+  private val schema: StructType = StructType(fields.map(f => StructField(f.name, f.sparkType)))
+
+  private def runWithInterval(interval: Duration, stopRef: AtomicBoolean): Future[Unit] = Future {
+    var counter = 0
+    val header = createCsvLine(fields.map(_.name))
+    while (!stopRef.get()) {
+      generateBatch(counter)
+        .flatMap(records => writeToFile(header :: records, counter))
+        .recover { case e => logger.error(s"Failed to generate file", e) }
+      Try(Thread.sleep(interval.toMillis))
+        .recover { case e => logger.error("Error while sleeping", e) }
+      counter += 1
+    }
+  }
+
+  private def generateBatch(fileNum: Int): Try[List[String]] = {
+    (0 until numRecords).toList.traverse(generateRow(fileNum, _))
+  }
+
+  private def generateRow(fileNum: Int, rowNum: Int): Try[String] = {
+    fields.map(_.generate(fileNum, rowNum)).sequence.map(createCsvLine)
+  }
+
+  private def writeToFile(lines: List[String], fileNum: Int): Try[Unit] = Try {
+    for {
+      path <- resolveFilePath(fileNum)
+      content = lines.mkString("", "\n", "\n")
+      result <- Try(Files.writeString(path, content))
+      _ = logger.info(s"Generated file: $path")
+    } yield result
+  }
+
+  private def resolveFilePath(counter: Int): Try[Path] = Try {
+    outputPath.resolve(f"$runId-$counter%06d.csv")
+  }
+
+  private def createCsvLine(values: List[String]): String = {
+    values.mkString(",")
   }
 }

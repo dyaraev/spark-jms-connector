@@ -12,6 +12,38 @@ import scala.concurrent.duration._
 import scala.concurrent.{Await, Future}
 import scala.util.Try
 
+object MessageReceiver {
+
+  private val logger = Logger(getClass)
+
+  private val WaitTimeout = 30.seconds
+
+  def withMessageReceiver(amqAddress: ActiveMqAddress, queue: String, receiveTimeout: Duration, logEmpty: Boolean)(
+      f: () => Try[Unit]
+  ): Try[Unit] = {
+    val stopRef = new AtomicBoolean(false)
+    newReceiver(amqAddress, queue).flatMap { receiver =>
+      val future = receiver.run(receiveTimeout, logEmpty, stopRef)
+      val result = Try(f().get)
+
+      stopRef.set(true)
+      Try[Unit](Await.ready(future, WaitTimeout))
+        .recover { case e => logger.warn("Message receiver execution error", e) }
+
+      result
+    }
+  }
+
+  private def newReceiver(amqAddress: ActiveMqAddress, queue: String): Try[MessageReceiver] = {
+    createSource(amqAddress, queue).map(source => new MessageReceiver(source))
+  }
+
+  private def createSource(address: ActiveMqAddress, queue: String): Try[JmsSourceClient] = Try {
+    val factory = new ActiveMQConnectionFactory(address.toString)
+    JmsSourceClient(factory, queue, transacted = false)
+  }
+}
+
 private class MessageReceiver(source: JmsSourceClient) {
 
   import MessageReceiver.logger
@@ -33,37 +65,5 @@ private class MessageReceiver(source: JmsSourceClient) {
       case Some(m)               => logger.info(s"UNKNOWN: ${m.getClass.getName}")
       case None                  => if (logEmpty) logger.info("No message received")
     }
-  }
-}
-
-object MessageReceiver {
-
-  private val logger = Logger(getClass)
-
-  private val WaitTimeout = 30.seconds
-
-  def withMessageReceiver(amqAddress: ActiveMqAddress, queue: String, receiveTimeout: Duration, logEmpty: Boolean)(
-      f: () => Try[Unit]
-  ): Try[Unit] = {
-    val stopRef = new AtomicBoolean(false)
-    newReceiver(amqAddress, queue).flatMap { receiver =>
-      val future = receiver.run(receiveTimeout, logEmpty, stopRef)
-      val result = Try(f().get)
-
-      stopRef.set(true)
-      Try[Unit](Await.ready(future, WaitTimeout))
-        .recover { case e: Throwable => logger.warn("Message receiver execution error", e) }
-
-      result
-    }
-  }
-
-  private def newReceiver(amqAddress: ActiveMqAddress, queue: String): Try[MessageReceiver] = {
-    createSource(amqAddress, queue).map(source => new MessageReceiver(source))
-  }
-
-  private def createSource(address: ActiveMqAddress, queue: String): Try[JmsSourceClient] = Try {
-    val factory = new ActiveMQConnectionFactory(address.toString)
-    JmsSourceClient(factory, queue, transacted = false)
   }
 }

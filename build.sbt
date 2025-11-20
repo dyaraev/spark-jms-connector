@@ -29,11 +29,15 @@ inThisBuild(
 lazy val assemblySettings = Seq(
   assembly / assemblyJarName := s"spark-jms-${name.value}-${version.value}.jar",
   assembly / assemblyOption ~= { _.withIncludeScala(false) },
+  assembly / assemblyMergeStrategy := {
+    case x if x.endsWith("module-info.class") => MergeStrategy.discard
+    case x                                    => (assembly / assemblyMergeStrategy).value(x)
+  },
 )
 
 lazy val root = (project in file("."))
   .disablePlugins(AssemblyPlugin)
-  .aggregate(common, connectorV1, connectorV2, examples)
+  .aggregate(common, connectorV1, connectorV2, providerActiveMq, examples)
 
 lazy val common = (project in file("common"))
   .disablePlugins(AssemblyPlugin)
@@ -58,9 +62,17 @@ lazy val connectorV2 = (project in file("connector-v2"))
     libraryDependencies ++= Dependencies.connectorDependencies,
   )
 
+lazy val providerActiveMq = (project in file("provider-activemq"))
+  .dependsOn(common % Provided)
+  .settings(
+    name := "provider-activemq",
+    assemblySettings,
+    libraryDependencies ++= Dependencies.providerActiveMq,
+  )
+
 lazy val examples = (project in file("examples"))
   .disablePlugins(AssemblyPlugin)
-  .dependsOn(common, connectorV1, connectorV2)
+  .dependsOn(common, connectorV1, connectorV2, providerActiveMq)
   .settings(
     name := "examples",
     run / fork := true,
