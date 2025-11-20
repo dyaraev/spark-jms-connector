@@ -1,0 +1,37 @@
+[data-md-color-scheme="slate"] {
+  --md-hue: 240;
+}
+
+.md-typeset table {
+  width: 100%;
+}
+
+.md-typeset table:not([class]) {
+  display: table;
+}
+
+.md-typeset__table {
+  width: 100%;
+}
+
+.conf-table table td:nth-child(1),
+.conf-table table th:nth-child(1) {
+  white-space: nowrap;
+  width: 30%;
+}
+
+.conf-table table td:nth-child(2),
+.conf-table table th:nth-child(2) {
+  white-space: nowrap;
+  min-width: 10%;
+}
+
+.format-table table td:nth-child(1),
+.format-table table th:nth-child(1),
+.format-table table td:nth-child(2),
+.format-table table th:nth-child(2),
+.format-table table td:nth-child(3),
+.format-table table th:nth-child(3) {
+  white-space: nowrap;
+  min-width: 20%;
+}
