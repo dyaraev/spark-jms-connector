@@ -2,9 +2,18 @@ name: Build and Release
 
 on:
   push:
-    branches: [ "main" ]
+    branches:
+      - main
+    paths-ignore:
+      - docs/**
+      - mkdocs.yml
+
   pull_request:
-    branches: [ "main" ]
+    branches:
+      - main
+    paths-ignore:
+      - docs/**
+      - mkdocs.yml
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
