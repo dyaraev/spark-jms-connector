@@ -17,11 +17,11 @@ on:
       - mkdocs.yml
       - .github/workflows/ci-docs.yml
     tags:
-      - *
+      - '*'
 
   delete:
     branches:
-      - *
+      - '*'
 
 permissions:
   contents: write
