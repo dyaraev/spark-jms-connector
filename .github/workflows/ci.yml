@@ -7,6 +7,7 @@ on:
     paths-ignore:
       - docs/**
       - mkdocs.yml
+      - .github/workflows/ci-docs.yml
 
   pull_request:
     branches:
@@ -14,6 +15,7 @@ on:
     paths-ignore:
       - docs/**
       - mkdocs.yml
+      - .github/workflows/ci-docs.yml
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
