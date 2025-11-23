@@ -12,9 +12,9 @@ theme:
     - navigation.expand
     - navigation.sections
     - navigation.top
-    - toc.integrate
     - search.highlight
     - search.suggest
+    - toc.integrate
   font:
     text: Roboto
     code: Inconsolata
@@ -32,9 +32,9 @@ nav:
 markdown_extensions:
   - admonition
   - pymdownx.details
+  - pymdownx.blocks.html
   - pymdownx.superfences
   - pymdownx.inlinehilite
-  - pymdownx.blocks.html
   - pymdownx.highlight:
       anchor_linenums: true
       line_spans: __span
@@ -47,8 +47,12 @@ plugins:
   - search
   - privacy:
       enabled: true
+  - mike:
+      version_selector: true
 
-copyright: <p> Copyright &copy; <script>document.write(new Date().getFullYear())</script>. All Rights Reserved.</p>
+copyright: <p>Copyright &copy; <script>document.write(new Date().getFullYear())</script>. All Rights Reserved.</p>
 
 extra:
   generator: true
+  version:
+    provider: mike

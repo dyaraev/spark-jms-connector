@@ -1,12 +1,25 @@
 name: Deploy Pages
 
 on:
+  pull_request:
+    branches:
+      - main
+    paths:
+      - 'docs/**'
+      - 'mkdocs.yml'
+
   push:
     branches:
       - main
     paths:
       - 'docs/**'
       - 'mkdocs.yml'
+    tags:
+      - '*'
+
+  delete:
+    branches:
+      - '*'
 
 permissions:
   contents: write
@@ -17,24 +30,59 @@ jobs:
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
+        with:
+          fetch-depth: 0  # Fetch all history for mike
 
-      - name: Set up Python
+      - name: Setup Python
         uses: actions/setup-python@v5
         with:
           python-version: 3.x
 
-      - name: Configure environment
-        id: configure
-        run: echo "cache_id=$(date --utc '+%V')" >> $GITHUB_ENV
-
-      - name: Load caches
+      - name: Cache MkDocs build
         uses: actions/cache@v4
         with:
-          key: mkdocs-material-${{ steps.configure.outputs.cache_id }}
-          path: ~/.cache
+          path: .cache
+          key: mkdocs-${{ github.sha }}
           restore-keys: |
-            mkdocs-material-
+            mkdocs-
 
-      - name: Deploy to GitHub Pages
+      - name: Install dependencies
         run: |
-          mkdocs gh-deploy --force
+          pip install mkdocs-material mike
+
+      - name: Configure Git
+        run: |
+          git config user.name github-actions[bot]
+          git config user.email github-actions[bot]@users.noreply.github.com
+
+      # Deploy for Pull Request
+      - name: Deploy PR documentation
+        if: ${{ github.event_name == 'pull_request' }}
+        run: |
+          VERSION="${{ github.head_ref }}"
+          mike deploy --push --update-aliases "$VERSION"
+
+      # Deploy for Push to main
+      - name: Deploy latest documentation
+        if: ${{ github.event_name == 'push' && github.ref == 'refs/heads/main' }}
+        run: |
+          mike deploy --push --update-aliases latest
+          mike set-default --push latest
+
+      # Deploy for Tag
+      - name: Deploy tagged documentation
+        if: ${{ github.event_name == 'push' && startsWith(github.ref, 'refs/tags/') }}
+        run: |
+          VERSION="${{ github.ref_name }}"
+          mike deploy --push --update-aliases "$VERSION"
+
+      # Delete version when branch is deleted
+      - name: Delete documentation version
+        if: ${{ github.event_name == 'delete' && github.event.ref_type == 'branch' }}
+        run: |
+          VERSION="${{ github.event.ref }}"
+          if mike list | grep -q "$VERSION"; then
+            mike delete --push "$VERSION"
+          else
+            echo "Version $VERSION does not exist, skipping deletion"
+          fi
