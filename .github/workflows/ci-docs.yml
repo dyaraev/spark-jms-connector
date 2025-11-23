@@ -1,19 +1,21 @@
-name: Deploy Pages
+name: Deploy GitHub Pages
 
 on:
   pull_request:
     branches:
       - main
     paths:
-      - 'docs/**'
-      - 'mkdocs.yml'
+      - docs/**
+      - mkdocs.yml'
+      - .github/workflows/ci-docs.yml
 
   push:
     branches:
       - main
     paths:
-      - 'docs/**'
-      - 'mkdocs.yml'
+      - docs/**
+      - mkdocs.yml
+      - .github/workflows/ci-docs.yml
     tags:
       - '*'
 
@@ -80,8 +82,8 @@ jobs:
       - name: Delete documentation version
         if: ${{ github.event_name == 'delete' && github.event.ref_type == 'branch' }}
         run: |
-          VERSION="${{ github.event.ref }}"
-          if mike list | grep -q "$VERSION"; then
+          VERSION=$(echo "${{ github.head_ref }}" | sed 's/[^a-zA-Z0-9-]/-/g')
+          if [[ mike list | grep -q "$VERSION" ]]; then
             mike delete --push "$VERSION"
           else
             echo "Version $VERSION does not exist, skipping deletion"
