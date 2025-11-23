@@ -8,10 +8,5 @@
     "version": "docs-github-pages",
     "title": "docs-github-pages",
     "aliases": []
-  },
-  {
-    "version": "docs-ci-deleted",
-    "title": "docs-ci-deleted",
-    "aliases": []
   }
 ]
