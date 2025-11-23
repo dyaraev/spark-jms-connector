@@ -1,0 +1,138 @@
+name: Build and Deploy Documentation (Update)
+
+on:
+  push:
+    branches: [ main ]
+    paths:
+      - docs/**
+      - mkdocs.yml
+      - .github/workflows/ci-docs-delete-deploy.yml
+      - .github/workflows/ci-docs-push-deploy.yml
+
+  pull_request:
+    branches: [ main ]
+    paths:
+      - docs/**
+      - mkdocs.yml
+      - .github/workflows/ci-docs-delete-deploy.yml
+      - .github/workflows/ci-docs-push-deploy.yml
+
+  release:
+    types: [ published ]
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
+jobs:
+  deploy_to_branch:
+    runs-on: ubuntu-latest
+
+    concurrency:
+      group: docs-deploy-to-branch
+      cancel-in-progress: false
+
+    permissions:
+      contents: write
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0  # Fetch all history for mike
+
+      - name: Retrieve SHA of gh-pages branch
+        id: pages
+        run: |
+          LATEST_SHA=$(git ls-remote origin refs/heads/gh-pages | awk '{print $1}')
+          echo "revision=$LATEST_SHA" >> $GITHUB_OUTPUT
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: 3.x
+
+      - name: Cache MkDocs build
+        uses: actions/cache@v4
+        with:
+          path: .cache
+          key: mkdocs-${{ steps.pages.outputs.revision }}
+          restore-keys: |
+            mkdocs-
+
+      - name: Cache pip dependencies
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/pip
+          key: pip-${{ hashFiles('requirements-docs.txt') }}
+          restore-keys: |
+            pip-
+
+      - name: Install dependencies
+        run: pip install -r requirements-docs.txt
+
+      - name: Configure Git
+        run: |
+          git config user.name github-actions[bot]
+          git config user.email github-actions[bot]@users.noreply.github.com
+
+      # Deploy for pull request
+      - name: Deploy PR documentation
+        if: ${{ github.event_name == 'pull_request' }}
+        run: |
+          VERSION=$(echo "${{ github.head_ref }}" | sed 's/[^a-zA-Z0-9-]/-/g')
+          mike deploy --push --update-aliases "$VERSION"
+
+      # Deploy for push to main
+      - name: Deploy latest documentation
+        if: ${{ github.event_name == 'push' && github.ref == 'refs/heads/main' }}
+        run: |
+          mike deploy --push --update-aliases latest
+          mike set-default --push --allow-empty latest
+
+      # Deploy for release
+      - name: Deploy release documentation
+        if: ${{ github.event_name == 'release' }}
+        run: |
+          VERSION="${{ github.event.release.tag_name }}"
+          mike deploy --push --update-aliases "$VERSION"
+
+  upload_to_artifacts:
+    needs: deploy_to_branch
+    runs-on: ubuntu-latest
+
+    permissions:
+      contents: read
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          ref: 'gh-pages'
+          fetch-depth: 1
+
+      - name: Upload static files as artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: '.'
+
+  deploy_to_pages:
+    needs: upload_to_artifacts
+    runs-on: ubuntu-latest
+
+    concurrency:
+      group: docs-deploy-to-pages
+      cancel-in-progress: false
+
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+
+    permissions:
+      pages: write       # allow deploying Pages
+      id-token: write    # required for OIDC auth
+
+    steps:
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4
