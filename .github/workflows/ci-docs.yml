@@ -59,7 +59,7 @@ jobs:
       - name: Deploy PR documentation
         if: ${{ github.event_name == 'pull_request' }}
         run: |
-          VERSION="${{ github.head_ref }}"
+          VERSION=$(echo "${{ github.head_ref }}" | sed 's/[^a-zA-Z0-9-]/-/g')
           mike deploy --push --update-aliases "$VERSION"
 
       # Deploy for Push to main
