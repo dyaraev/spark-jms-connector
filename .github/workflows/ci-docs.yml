@@ -11,14 +11,14 @@ on:
     tags:
       - '*'
 
-#  pull_request:
-#    branches:
-#      - main
-#    paths:
-#      - docs/**
-#      - mkdocs.yml
-#      - .github/workflows/ci-docs.yml
-#
+  pull_request:
+    branches:
+      - main
+    paths:
+      - docs/**
+      - mkdocs.yml
+      - .github/workflows/ci-docs.yml
+
 #  delete:
 #    branches:
 #      - '*'
@@ -76,6 +76,12 @@ jobs:
         run: |
           VERSION="${{ github.ref_name }}"
           mike deploy --push --update-aliases "$VERSION"
+
+      # Build documentation on pull request
+      - name: Deploy PR documentation
+        if: ${{ github.event_name == 'pull_request' }}
+        run: |
+          mike deploy test
 
 #      # Deploy for pull request
 #      - name: Deploy PR documentation
