@@ -4,6 +4,7 @@ repo_url: https://github.com/dyaraev/spark-jms-connector
 theme:
   name: material
 #  highlightjs: true
+  custom_dir: docs/overrides
   palette:
     - scheme: slate
       primary: orange
