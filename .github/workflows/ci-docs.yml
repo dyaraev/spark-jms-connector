@@ -30,17 +30,25 @@ jobs:
   deploy_to_branch:
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout repository
+      - name: Generate GitHub App Token
+        id: app-token
+        uses: actions/create-github-app-token@v1
+        with:
+          app-id: ${{ secrets.APP_ID }}
+          private-key: ${{ secrets.APP_SECRET }}
+
+      - name: Checkout Repository
         uses: actions/checkout@v4
         with:
           fetch-depth: 0  # Fetch all history for mike
+          token: ${{ steps.app-token.outputs.token }}
 
       - name: Setup Python
         uses: actions/setup-python@v5
         with:
           python-version: 3.x
 
-      - name: Cache MkDocs build
+      - name: Cache MkDocs Build
         uses: actions/cache@v4
         with:
           path: .cache
@@ -48,38 +56,38 @@ jobs:
           restore-keys: |
             mkdocs-
 
-      - name: Install dependencies
+      - name: Install Dependencies
         run: |
           pip install mkdocs-material mike
 
       - name: Configure Git
         run: |
-          git config user.name github-actions[bot]
-          git config user.email github-actions[bot]@users.noreply.github.com
+          git config user.name spark-jms-connector-docs[bot]
+          git config user.email spark-jms-connector-docs[bot]@users.noreply.github.com
 
       # Deploy for Pull Request
-      - name: Deploy PR documentation
+      - name: Deploy PR Documentation
         if: ${{ github.event_name == 'pull_request' }}
         run: |
           VERSION=$(echo "${{ github.head_ref }}" | sed 's/[^a-zA-Z0-9-]/-/g')
           mike deploy --push --update-aliases "$VERSION"
 
       # Deploy for Push to main
-      - name: Deploy latest documentation
+      - name: Deploy latest Documentation
         if: ${{ github.event_name == 'push' && github.ref == 'refs/heads/main' }}
         run: |
           mike deploy --push --update-aliases latest
           mike set-default --push latest
 
       # Deploy for Tag
-      - name: Deploy tagged documentation
+      - name: Deploy tagged Documentation
         if: ${{ github.event_name == 'push' && startsWith(github.ref, 'refs/tags/') }}
         run: |
           VERSION="${{ github.ref_name }}"
           mike deploy --push --update-aliases "$VERSION"
 
       # Delete version when branch is deleted
-      - name: Delete documentation version
+      - name: Delete Documentation Version
         if: ${{ github.event_name == 'delete' && github.event.ref_type == 'branch' }}
         run: |
           VERSION=$(echo "${{ github.event.ref }}" | sed 's/[^a-zA-Z0-9-]/-/g')
