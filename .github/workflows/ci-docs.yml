@@ -29,6 +29,7 @@ permissions:
 jobs:
   deploy_to_branch:
     runs-on: ubuntu-latest
+    environment: github-pages
     steps:
       - name: Generate GitHub App Token
         id: app-token
