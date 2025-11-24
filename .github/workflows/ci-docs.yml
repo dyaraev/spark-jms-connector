@@ -49,7 +49,7 @@ jobs:
       - name: Cache MkDocs build
         uses: actions/cache@v4
         with:
-          path: ~/.cache/mkdocs
+          path: .cache
           key: mkdocs-${{ github.sha }}
           restore-keys: |
             mkdocs-
