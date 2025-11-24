@@ -12,7 +12,6 @@ _Please read [the disclaimer](#disclaimer) below before using this connector._
 - [Features](#features)
 - [Requirements](#requirements)
 - [Usage Examples](#usage-examples)
-- [Documentation Links](#documentation-links)
 - [Disclaimer](#disclaimer)
 
 ## Features

@@ -35,7 +35,7 @@ Some of the limitations include:
 
 ## License
 
-This project is released under the [MIT License](../LICENSE), which allows you to freely use, modify, and distribute the code with minimal restrictions. 
+This project is released under the [MIT License](https://github.com/dyaraev/spark-jms-connector/blob/main/LICENSE), which allows you to freely use, modify, and distribute the code with minimal restrictions. 
 By using this project, you agree to the terms outlined in the license.
 
 ## Disclaimer
