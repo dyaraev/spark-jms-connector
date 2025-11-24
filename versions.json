@@ -3,10 +3,5 @@
     "version": "latest",
     "title": "latest",
     "aliases": []
-  },
-  {
-    "version": "ci-github-app-docs",
-    "title": "ci-github-app-docs",
-    "aliases": []
   }
 ]
