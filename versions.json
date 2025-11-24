@@ -5,6 +5,11 @@
     "aliases": []
   },
   {
+    "version": "docs-google-tag",
+    "title": "docs-google-tag",
+    "aliases": []
+  },
+  {
     "version": "docs-github-pages",
     "title": "docs-github-pages",
     "aliases": []
