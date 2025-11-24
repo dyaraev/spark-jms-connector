@@ -80,11 +80,10 @@ jobs:
 
       # Deploy for release
       - name: Deploy release documentation
-        if: ${{ github.event_name == 'publish' }}
+        if: ${{ github.event_name == 'release' }}
         run: |
           VERSION="${{ github.event.release.tag_name }}"
           mike deploy --push --update-aliases "$VERSION"
-          mike deploy --push --update-aliases latest
           mike set-default --push latest
 
       # Deploy for pull request
@@ -122,7 +121,7 @@ jobs:
       - name: Checkout branch
         uses: actions/checkout@v4
         with:
-          fetch-depth: 0
+          fetch-depth: 1
           ref: gh-pages
 
       - name: Setup Pages
