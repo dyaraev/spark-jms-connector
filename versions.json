@@ -5,11 +5,6 @@
     "aliases": []
   },
   {
-    "version": "docs-github-pages",
-    "title": "docs-github-pages",
-    "aliases": []
-  },
-  {
     "version": "ci-github-app-docs",
     "title": "ci-github-app-docs",
     "aliases": []
