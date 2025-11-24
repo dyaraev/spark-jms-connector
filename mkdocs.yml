@@ -54,5 +54,8 @@ copyright: <p>Copyright &copy; <script>document.write(new Date().getFullYear())<
 
 extra:
   generator: true
+  meta:
+    - name: google-site-verification
+      content: "9-9uB7kZ39vpiYtM2v6hgtWnSThqEUKTh3Glv8phofo"
   version:
     provider: mike
