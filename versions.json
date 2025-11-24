@@ -5,6 +5,11 @@
     "aliases": []
   },
   {
+    "version": "fix-pages-ci-race",
+    "title": "fix-pages-ci-race",
+    "aliases": []
+  },
+  {
     "version": "docs-github-pages",
     "title": "docs-github-pages",
     "aliases": []
