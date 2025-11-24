@@ -8,5 +8,10 @@
     "version": "docs-github-pages",
     "title": "docs-github-pages",
     "aliases": []
+  },
+  {
+    "version": "ci-pages-deployment",
+    "title": "ci-pages-deployment",
+    "aliases": []
   }
 ]
