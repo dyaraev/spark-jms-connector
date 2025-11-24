@@ -5,11 +5,6 @@
     "aliases": []
   },
   {
-    "version": "fix-pages-ci-artifact",
-    "title": "fix-pages-ci-artifact",
-    "aliases": []
-  },
-  {
     "version": "docs-github-pages",
     "title": "docs-github-pages",
     "aliases": []
