@@ -8,8 +8,6 @@ on:
       - docs/**
       - mkdocs.yml
       - .github/workflows/ci-docs.yml
-    tags:
-      - '*'
 
   pull_request:
     branches:
@@ -18,6 +16,9 @@ on:
       - docs/**
       - mkdocs.yml
       - .github/workflows/ci-docs.yml
+
+  release:
+    types: [published]
 
 #  delete:
 #    branches:
@@ -77,18 +78,21 @@ jobs:
           mike deploy --push --update-aliases latest
           mike set-default --push latest
 
-      # Deploy for tag
-      - name: Deploy tagged documentation
-        if: ${{ github.event_name == 'push' && startsWith(github.ref, 'refs/tags/') }}
+      # Deploy for release
+      - name: Deploy release documentation
+        if: ${{ github.event_name == 'publish' }}
         run: |
-          VERSION="${{ github.ref_name }}"
+          VERSION="${{ github.event.release.tag_name }}"
           mike deploy --push --update-aliases "$VERSION"
+          mike deploy --push --update-aliases latest
+          mike set-default --push latest
 
       # Deploy for pull request
       - name: Deploy PR documentation
         if: ${{ github.event_name == 'pull_request' }}
         run: |
           mike deploy --push --update-aliases dev
+          mike set-default --push latest
 
 #      - name: Deploy PR documentation
 #        if: ${{ github.event_name == 'pull_request' }}
