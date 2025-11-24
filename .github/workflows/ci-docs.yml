@@ -6,7 +6,7 @@ on:
       - main
     paths:
       - docs/**
-      - mkdocs.yml'
+      - mkdocs.yml
       - .github/workflows/ci-docs.yml
 
   push:
