@@ -5,6 +5,11 @@
     "aliases": []
   },
   {
+    "version": "fix-pages-ci-wrong-conditions",
+    "title": "fix-pages-ci-wrong-conditions",
+    "aliases": []
+  },
+  {
     "version": "dev",
     "title": "dev",
     "aliases": []
