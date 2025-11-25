@@ -5,6 +5,11 @@
     "aliases": []
   },
   {
+    "version": "ci-split-docs-ci",
+    "title": "ci-split-docs-ci",
+    "aliases": []
+  },
+  {
     "version": "dev",
     "title": "dev",
     "aliases": []
