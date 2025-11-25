@@ -37,6 +37,12 @@ jobs:
         with:
           fetch-depth: 0  # Fetch all history for mike
 
+      - name: Retrieve SHA of gh-pages branch
+        id: pages
+        run: |
+          LATEST_SHA=$(git ls-remote origin refs/heads/gh-pages | awk '{print $1}')
+          echo "revision=$LATEST_SHA" >> $GITHUB_OUTPUT
+
       - name: Setup Python
         uses: actions/setup-python@v5
         with:
@@ -46,7 +52,7 @@ jobs:
         uses: actions/cache@v4
         with:
           path: .cache
-          key: mkdocs-${{ github.sha }}
+          key: mkdocs-${{ steps.pages.outputs.revision }}
           restore-keys: |
             mkdocs-
 
