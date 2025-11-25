@@ -86,6 +86,10 @@ jobs:
     runs-on: ubuntu-latest
     if: ${{ github.event_name != 'delete' }}
 
+    concurrency:
+      group: pages-deploy
+      cancel-in-progress: false
+
     environment:
       name: github-pages
       url: ${{ steps.deployment.outputs.page_url }}
