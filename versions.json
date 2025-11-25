@@ -5,6 +5,11 @@
     "aliases": []
   },
   {
+    "version": "fix-pages-ci-structure",
+    "title": "fix-pages-ci-structure",
+    "aliases": []
+  },
+  {
     "version": "dev",
     "title": "dev",
     "aliases": []
