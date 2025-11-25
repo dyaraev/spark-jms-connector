@@ -105,23 +105,42 @@ jobs:
           else
             echo "Version $VERSION does not exist, skipping deletion"
           fi
-#
-#  deploy_to_pages:
-#    needs: deploy_to_branch
-#    runs-on: ubuntu-latest
-#
-#    environment:
-#      name: github-pages
-#      url: ${{ steps.deploy-pages.outputs.page_url }}
-#
-#    permissions:
-#      pages: write       # allow deploying Pages
-#      id-token: write    # required for OIDC auth
-#
-#    steps:
-#      - name: Publish GitHub Pages (branch mode)
-#        id: deploy-pages
-#        uses: actions/deploy-pages@v4
-#        with:
-#          branch: gh-pages
-#          folder: .
+
+  upload_to_artifacts:
+    needs: deploy_to_branch
+    runs-on: ubuntu-latest
+
+    permissions:
+      contents: read
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          ref: 'gh-pages'
+          fetch-depth: 1
+
+      - name: Upload static files as artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: '.'
+
+  deploy_to_pages:
+    needs: upload_to_artifacts
+    runs-on: ubuntu-latest
+
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+
+    permissions:
+      pages: write       # allow deploying Pages
+      id-token: write    # required for OIDC auth
+
+    steps:
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4
+        with:
+          branch: gh-pages
+          folder: .
