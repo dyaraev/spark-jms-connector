@@ -105,23 +105,23 @@ jobs:
           else
             echo "Version $VERSION does not exist, skipping deletion"
           fi
-
-  deploy_to_pages:
-    needs: deploy_to_branch
-    runs-on: ubuntu-latest
-
-    environment:
-      name: github-pages
-      url: ${{ steps.deploy-pages.outputs.page_url }}
-
-    permissions:
-      pages: write       # allow deploying Pages
-      id-token: write    # required for OIDC auth
-
-    steps:
-      - name: Publish GitHub Pages (branch mode)
-        id: deploy-pages
-        uses: actions/deploy-pages@v4
-        with:
-          branch: gh-pages
-          folder: .
+#
+#  deploy_to_pages:
+#    needs: deploy_to_branch
+#    runs-on: ubuntu-latest
+#
+#    environment:
+#      name: github-pages
+#      url: ${{ steps.deploy-pages.outputs.page_url }}
+#
+#    permissions:
+#      pages: write       # allow deploying Pages
+#      id-token: write    # required for OIDC auth
+#
+#    steps:
+#      - name: Publish GitHub Pages (branch mode)
+#        id: deploy-pages
+#        uses: actions/deploy-pages@v4
+#        with:
+#          branch: gh-pages
+#          folder: .
