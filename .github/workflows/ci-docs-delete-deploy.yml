@@ -1,29 +1,12 @@
-name: Build and Deploy Documentation
+name: Build and Deploy Documentation (Delete)
 
 on:
-  push:
-    branches: [ main ]
-    paths:
-      - docs/**
-      - mkdocs.yml
-      - .github/workflows/ci-docs.yml
-
-  pull_request:
-    branches: [ main ]
-    paths:
-      - docs/**
-      - mkdocs.yml
-      - .github/workflows/ci-docs.yml
-
   delete:
     branches: [ '*' ]
 
-  release:
-    types: [ published ]
-
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
-  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+  cancel-in-progress: true
 
 jobs:
   deploy_to_branch:
@@ -67,34 +50,6 @@ jobs:
           git config user.name github-actions[bot]
           git config user.email github-actions[bot]@users.noreply.github.com
 
-      - name: Fetch gh-pages branch
-        run: git fetch origin gh-pages --depth=1
-
-      # Deploy for push to main
-      - name: Deploy latest documentation
-        if: ${{ github.event_name == 'push' && github.ref == 'refs/heads/main' }}
-        run: |
-          mike deploy --push --update-aliases latest
-
-      # Deploy for release
-      - name: Deploy release documentation
-        if: ${{ github.event_name == 'release' }}
-        run: |
-          VERSION="${{ github.event.release.tag_name }}"
-          mike deploy --push --update-aliases "$VERSION"
-
-#      - name: Deploy PR documentation
-#        if: ${{ github.event_name == 'pull_request' }}
-#        run: |
-#          mike deploy --push --update-aliases dev
-#
-      # Deploy for pull request
-      - name: Deploy PR documentation
-        if: ${{ github.event_name == 'pull_request' }}
-        run: |
-          VERSION=$(echo "${{ github.head_ref }}" | sed 's/[^a-zA-Z0-9-]/-/g')
-          mike deploy --push --update-aliases "$VERSION"
-
       # Delete version when branch is deleted
       - name: Delete documentation version
         if: ${{ github.event_name == 'delete' && github.event.ref_type == 'branch' }}
@@ -130,6 +85,10 @@ jobs:
     needs: upload_to_artifacts
     runs-on: ubuntu-latest
     if: ${{ github.event_name != 'delete' }}
+
+    concurrency:
+      group: pages-deploy
+      cancel-in-progress: false
 
     environment:
       name: github-pages
