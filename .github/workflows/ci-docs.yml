@@ -2,40 +2,36 @@ name: Build and Deploy Documentation
 
 on:
   push:
-    branches:
-      - main
+    branches: [ main ]
     paths:
       - docs/**
       - mkdocs.yml
       - .github/workflows/ci-docs.yml
 
   pull_request:
-    branches:
-      - main
+    branches: [ main ]
     paths:
       - docs/**
       - mkdocs.yml
       - .github/workflows/ci-docs.yml
 
-  release:
-    types: [published]
+  delete:
+    branches: [ '*' ]
 
-#  delete:
-#    branches:
-#      - '*'
+  release:
+    types: [ published ]
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 
-permissions:
-  contents: write
-  pages: write
-  id-token: write
-
 jobs:
   deploy_to_branch:
     runs-on: ubuntu-latest
+
+    permissions:
+      contents: write
+
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
@@ -79,7 +75,6 @@ jobs:
         if: ${{ github.event_name == 'push' && github.ref == 'refs/heads/main' }}
         run: |
           mike deploy --push --update-aliases latest
-          mike set-default --push latest
 
       # Deploy for release
       - name: Deploy release documentation
@@ -87,56 +82,62 @@ jobs:
         run: |
           VERSION="${{ github.event.release.tag_name }}"
           mike deploy --push --update-aliases "$VERSION"
-          mike set-default --push latest
-
-      # Deploy for pull request
-      - name: Deploy PR documentation
-        if: ${{ github.event_name == 'pull_request' }}
-        run: |
-          mike deploy --push --update-aliases dev
-          mike set-default --push latest
 
 #      - name: Deploy PR documentation
 #        if: ${{ github.event_name == 'pull_request' }}
 #        run: |
-#          VERSION=$(echo "${{ github.head_ref }}" | sed 's/[^a-zA-Z0-9-]/-/g')
-#          mike deploy --push --update-aliases "$VERSION"
+#          mike deploy --push --update-aliases dev
 #
-#      # Delete version when branch is deleted
-#      - name: Delete documentation version
-#        if: ${{ github.event_name == 'delete' && github.event.ref_type == 'branch' }}
-#        run: |
-#          VERSION=$(echo "${{ github.event.ref }}" | sed 's/[^a-zA-Z0-9-]/-/g')
-#          if [[ $(mike list "$VERSION") ]]; then
-#            mike delete --push "$VERSION"
-#          else
-#            echo "Version $VERSION does not exist, skipping deletion"
-#          fi
+      # Deploy for pull request
+      - name: Deploy PR documentation
+        if: ${{ github.event_name == 'pull_request' }}
+        run: |
+          VERSION=$(echo "${{ github.head_ref }}" | sed 's/[^a-zA-Z0-9-]/-/g')
+          mike deploy --push --update-aliases "$VERSION"
 
-  deploy_to_pages:
-    environment:
-      name: spark-jms-connector
-      url: https://dyaraev.github.io/spark-jms-connector/
-    runs-on: ubuntu-latest
+      # Delete version when branch is deleted
+      - name: Delete documentation version
+        if: ${{ github.event_name == 'delete' && github.event.ref_type == 'branch' }}
+        run: |
+          VERSION=$(echo "${{ github.event.ref }}" | sed 's/[^a-zA-Z0-9-]/-/g')
+          if [[ $(mike list "$VERSION") ]]; then
+            mike delete --push "$VERSION"
+          else
+            echo "Version $VERSION does not exist, skipping deletion"
+          fi
+
+  upload_to_artifacts:
     needs: deploy_to_branch
-#    if: ${{ github.event_name == 'push' }}
+    runs-on: ubuntu-latest
+
+    permissions:
+      contents: read
+
     steps:
-      - name: Checkout branch
+      - name: Checkout repository
         uses: actions/checkout@v4
         with:
+          ref: 'gh-pages'
           fetch-depth: 1
-          ref: gh-pages
 
-      - name: Setup Pages
-        uses: actions/configure-pages@v5
-
-      - name: Upload artifact
+      - name: Upload static files as artifact
         uses: actions/upload-pages-artifact@v3
         with:
-          name: github-pages-${{ github.run_id }}
           path: '.'
 
+  deploy_to_pages:
+    needs: upload_to_artifacts
+    runs-on: ubuntu-latest
+
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+
+    permissions:
+      pages: write       # allow deploying Pages
+      id-token: write    # required for OIDC auth
+
+    steps:
       - name: Deploy to GitHub Pages
+        id: deployment
         uses: actions/deploy-pages@v4
-        with:
-          artifact_name: github-pages-${{ github.run_id }}
