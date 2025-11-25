@@ -5,11 +5,6 @@
     "aliases": []
   },
   {
-    "version": "ci-pages-deploy-condition",
-    "title": "ci-pages-deploy-condition",
-    "aliases": []
-  },
-  {
     "version": "dev",
     "title": "dev",
     "aliases": []
