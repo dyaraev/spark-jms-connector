@@ -12,6 +12,10 @@ jobs:
   deploy_to_branch:
     runs-on: ubuntu-latest
 
+    concurrency:
+      group: docs-deploy-to-branch
+      cancel-in-progress: false
+
     permissions:
       contents: write
 
@@ -91,7 +95,7 @@ jobs:
     runs-on: ubuntu-latest
 
     concurrency:
-      group: pages-deploy
+      group: docs-deploy-to-pages
       cancel-in-progress: false
 
     environment:

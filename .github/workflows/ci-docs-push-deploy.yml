@@ -28,6 +28,10 @@ jobs:
   deploy_to_branch:
     runs-on: ubuntu-latest
 
+    concurrency:
+      group: docs-deploy-to-branch
+      cancel-in-progress: false
+
     permissions:
       contents: write
 
@@ -84,6 +88,7 @@ jobs:
         if: ${{ github.event_name == 'push' && github.ref == 'refs/heads/main' }}
         run: |
           mike deploy --push --update-aliases latest
+          mike set-default --push --allow-empty latest
 
       # Deploy for release
       - name: Deploy release documentation
@@ -116,7 +121,7 @@ jobs:
     runs-on: ubuntu-latest
 
     concurrency:
-      group: pages-deploy
+      group: docs-deploy-to-pages
       cancel-in-progress: false
 
     environment:
