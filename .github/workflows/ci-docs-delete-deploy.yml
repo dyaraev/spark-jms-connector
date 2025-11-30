@@ -2,7 +2,6 @@ name: Build and Deploy Documentation (Delete)
 
 on:
   delete:
-    branches: [ '*' ]
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
@@ -10,6 +9,7 @@ concurrency:
 
 jobs:
   deploy_to_branch:
+    if: ${{ github.event_name == 'delete' && github.event.ref_type == 'branch' }}
     runs-on: ubuntu-latest
 
     concurrency:
@@ -62,7 +62,6 @@ jobs:
 
       # Delete version when branch is deleted
       - name: Delete documentation version
-        if: ${{ github.event_name == 'delete' && github.event.ref_type == 'branch' }}
         run: |
           VERSION=$(echo "${{ github.event.ref }}" | sed 's/[^a-zA-Z0-9-]/-/g')
           if [[ $(mike list "$VERSION") ]]; then
