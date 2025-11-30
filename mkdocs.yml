@@ -50,6 +50,7 @@ plugins:
       enabled: true
   - mike:
       version_selector: true
+      redirect_template: docs/redirect.html
 
 copyright: <p>Copyright &copy; <script>document.write(new Date().getFullYear())</script>. All Rights Reserved.</p>
 
