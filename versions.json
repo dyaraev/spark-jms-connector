@@ -3,5 +3,10 @@
     "version": "latest",
     "title": "latest",
     "aliases": []
+  },
+  {
+    "version": "fix-unique-docs-artifact",
+    "title": "fix-unique-docs-artifact",
+    "aliases": []
   }
 ]
