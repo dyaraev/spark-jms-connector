@@ -51,6 +51,7 @@ plugins:
   - mike:
       alias_type: symlink
       canonical_version: latest
+      redirect_template: docs/overrides/redirect.html
       version_selector: true
 
 copyright: <p>Copyright &copy; <script>document.write(new Date().getFullYear())</script>. All Rights Reserved.</p>
