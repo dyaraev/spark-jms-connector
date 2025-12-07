@@ -7,6 +7,7 @@ import io.github.dyaraev.spark.connector.jms.common.{ConnectionFactoryProvider, 
 import jakarta.jms.Message
 import org.apache.spark.internal.Logging
 import org.apache.spark.sql.catalyst.InternalRow
+import org.apache.spark.sql.classic.ClassicConversions.castToImpl
 import org.apache.spark.sql.execution.streaming.{LongOffset, Offset, SerializedOffset, Source}
 import org.apache.spark.sql.types._
 import org.apache.spark.sql.{DataFrame, SQLContext}
@@ -55,7 +56,7 @@ class JmsSource[T <: LogEntry: ClassTag](
       val endOrdinal = deserializeOffset(end).offset
 
       val logData = metadataLog.get(startOffset, Some(endOrdinal)).flatMap(_._2)
-      sqlContext.sparkContext.makeRDD(logData.map(_.toInternalRow))
+      sqlContext.sparkContext.makeRDD(logData.map(_.toInternalRow).toIndexedSeq)
     }
     sqlContext.internalCreateDataFrame(rdd, schema, isStreaming = true)
   }

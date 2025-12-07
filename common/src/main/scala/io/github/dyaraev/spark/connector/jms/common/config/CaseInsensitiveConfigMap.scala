@@ -33,8 +33,8 @@ class CaseInsensitiveConfigMap(val original: Map[String, String]) extends Serial
 
   def withPrefix(prefix: String): CaseInsensitiveConfigMap = {
     val lcPrefix = prefix.toLowerCase(Locale.ROOT)
-    val modifiedOriginalMap = original.filterKeys(_.toLowerCase(Locale.ROOT).startsWith(lcPrefix)).map(identity)
-    CaseInsensitiveConfigMap(modifiedOriginalMap)
+    val modifiedOriginalMap = original.filter { case (k, _) => k.toLowerCase(Locale.ROOT).startsWith(lcPrefix) }
+    new CaseInsensitiveConfigMap(modifiedOriginalMap)
   }
 }
 

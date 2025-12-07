@@ -2,10 +2,14 @@ import sbt.*
 
 object Dependencies {
 
+  val scala212Version = "2.12.20"
+  val scala213Version = "2.13.18"
+
   // Connector dependencies
+  val spark3Version = "3.5.7"
+  val spark4Version = "4.0.1"
   private val jakartaJmsVersion = "3.1.0"
   private val scalaTestVersion = "3.2.19"
-  private val sparkVersion = "3.5.7"
 
   // Provider dependencies
   private val activeMqVersion = "6.2.0"
@@ -14,11 +18,14 @@ object Dependencies {
   private val declineEffectVersion = "2.5.0"
   private val scalaLoggingVersion = "3.9.6"
 
-  lazy val connectorDependencies = Seq(
-    "jakarta.jms" % "jakarta.jms-api" % jakartaJmsVersion,
+  def sparkDependencies(sparkVersion: String) = Seq(
     "org.apache.spark" %% "spark-core" % sparkVersion % Provided,
     "org.apache.spark" %% "spark-sql" % sparkVersion % Provided,
     "org.apache.spark" %% "spark-streaming" % sparkVersion % Provided,
+  )
+
+  lazy val connector = Seq(
+    "jakarta.jms" % "jakarta.jms-api" % jakartaJmsVersion,
     "org.scalatest" %% "scalatest" % scalaTestVersion % Test,
   )
 
@@ -35,10 +42,7 @@ object Dependencies {
     ),
   )
 
-  lazy val exampleDependencies = Seq(
-    "org.apache.spark" %% "spark-core" % sparkVersion,
-    "org.apache.spark" %% "spark-sql" % sparkVersion,
-    "org.apache.spark" %% "spark-streaming" % sparkVersion,
+  lazy val examples = Seq(
     "com.typesafe.scala-logging" %% "scala-logging" % scalaLoggingVersion,
     "com.monovore" %% "decline-effect" % declineEffectVersion,
   )
