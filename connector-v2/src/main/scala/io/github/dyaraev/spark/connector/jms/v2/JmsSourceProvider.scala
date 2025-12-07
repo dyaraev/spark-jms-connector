@@ -23,12 +23,14 @@ import java.util.Locale
 
 class JmsSourceProvider extends SimpleTableProvider with DataSourceRegister with Logging {
 
-  override def shortName(): String = "jms-v2"
+  override def shortName(): String = JmsSourceProvider.FormatName
 
   override def getTable(options: CaseInsensitiveStringMap): Table = new JmsSourceProvider.JmsTable(options.toConfigMap)
 }
 
 object JmsSourceProvider {
+
+  val FormatName: String = "jms-v2"
 
   private class JmsTable(options: CaseInsensitiveConfigMap) extends Table with SupportsRead with SupportsWrite {
 

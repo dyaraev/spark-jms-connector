@@ -2,7 +2,7 @@
 
 A JMS connector for Apache Spark that provides functionality for reading from and writing to JMS queues using Spark Structured Streaming.
 To ensure at-least-once delivery for streaming sources, the connector uses a write-ahead log to keep messages that haven’t yet been successfully written to the destination.
-This is a fully functional implementation of Spark JMS connector, but it was created for educational purposes and has some [limitations](#limitations-and-considerations).
+This is a fully functional implementation of Spark JMS connector, but it was created for educational purposes and has some [limitations](https://dyaraev.github.io/spark-jms-connector/#limitations-and-considerations).
 The main purpose of this project is to provide a working example of how to implement a JMS connector for Apache Spark.
 
 _Please read [the disclaimer](#disclaimer) below before using this connector._
@@ -26,9 +26,11 @@ _Please read [the disclaimer](#disclaimer) below before using this connector._
 ## Requirements
 
 - Java 17
-- Scala 2.12.x
-- Apache Spark 3.5.x
+- Scala 2.12.x/2.13.x
+- Apache Spark 3.5.x/4.0.1
 - Jakarta JMS API 3.1.0
+
+See more about the requirements in the [documentation](https://dyaraev.github.io/spark-jms-connector/getting-started/#requirements)
 
 ## Usage Examples
 
@@ -62,7 +64,7 @@ df.writeStream
   .awaitTermination()
 ```
 
-_More information about the connector is and its configuration can be found in the [documentation](http://github.com)._
+_More information about the connector and its configuration can be found in the [documentation](https://dyaraev.github.io/spark-jms-connector/)._
 
 ## Disclaimer
 
