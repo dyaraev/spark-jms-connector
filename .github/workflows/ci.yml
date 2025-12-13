@@ -1,10 +1,35 @@
-name: Build and Release
+name: Build and Release Artifacts
 
 on:
   push:
-    branches: [ "main" ]
+    branches:
+      - main
+    paths:
+      - .github/workflows/ci.yml
+      - common/**
+      - connector-v1/**
+      - connector-v2/**
+      - provider-activemq/**
+      - project/**
+      - build.sbt
+      - scalafix.conf
+      - scalafmt.conf
+      - version.sbt
+
   pull_request:
-    branches: [ "main" ]
+    branches:
+      - main
+    paths:
+      - .github/workflows/ci.yml
+      - common/**
+      - connector-v1/**
+      - connector-v2/**
+      - provider-activemq/**
+      - project/**
+      - build.sbt
+      - scalafix.conf
+      - scalafmt.conf
+      - version.sbt
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
