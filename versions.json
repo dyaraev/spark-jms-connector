@@ -25,11 +25,6 @@
     "aliases": []
   },
   {
-    "version": "test-version3",
-    "title": "test-version3",
-    "aliases": []
-  },
-  {
     "version": "latest",
     "title": "latest",
     "aliases": []
