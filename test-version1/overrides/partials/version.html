@@ -1,0 +1,5 @@
+{% if config.extra.version.provider == "mike" %}
+<script>
+    window.mikeVersionsUrl = "{{ config.extra.version.url }}";
+</script>
+{% endif %}
