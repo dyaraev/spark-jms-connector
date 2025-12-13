@@ -1,0 +1,42 @@
+{% extends "base.html" %}
+
+{% block extrahead %}
+<meta name="google-site-verification" content="h5dR5ajxYLqOrmrN4wXgr8nfJ3U72XJPLCc-7tFu0zA" />
+{% endblock %}
+
+{% block scripts %}
+{{ super() }}
+<script>
+    (function () {
+      const origFetch = window.fetch;
+      if (!origFetch) return;
+
+      const cacheBust = "{{ config.extra.commit_hash | default('dev') }}";
+
+      window.fetch = function (input, init) {
+        let url;
+        try {
+          if (typeof input === "string") {
+            url = new URL(input, window.location.href);
+          } else if (input && typeof input === "object" && "url" in input) {
+            url = new URL(input.url, window.location.href);
+          }
+        } catch (e) {
+          // Just fall back
+        }
+
+        if (url && url.pathname.endsWith("/versions.json")) {
+          url.searchParams.set("v", cacheBust);
+
+          if (typeof input === "string") {
+            input = url.toString();
+          } else if (input && typeof input === "object" && "url" in input) {
+            input = new Request(url.toString(), input);
+          }
+        }
+
+        return origFetch(input, init);
+      };
+    })();
+</script>
+{% endblock %}
