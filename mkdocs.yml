@@ -60,3 +60,4 @@ extra:
   generator: true
   version:
     provider: mike
+  commit_hash: !ENV COMMIT_HASH

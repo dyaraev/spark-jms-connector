@@ -81,21 +81,21 @@ jobs:
         if: ${{ github.event_name == 'pull_request' }}
         run: |
           VERSION=$(echo "${{ github.head_ref }}" | sed 's/[^a-zA-Z0-9-]/-/g')
-          mike deploy --push --update-aliases "$VERSION"
+          COMMIT_HASH=$(git rev-parse --short HEAD) mike deploy --push --update-aliases "$VERSION"
 
       # Deploy for push to main
       - name: Deploy latest documentation
         if: ${{ github.event_name == 'push' && github.ref == 'refs/heads/main' }}
         run: |
-          mike deploy --push --update-aliases latest
-          mike set-default --push --allow-empty latest
+          COMMIT_HASH=$(git rev-parse --short HEAD) mike deploy --push --update-aliases latest
+          COMMIT_HASH=$(git rev-parse --short HEAD) mike set-default --push --allow-empty latest
 
       # Deploy for release
       - name: Deploy release documentation
         if: ${{ github.event_name == 'release' }}
         run: |
           VERSION="${{ github.event.release.tag_name }}"
-          mike deploy --push --update-aliases "$VERSION"
+          COMMIT_HASH=$(git rev-parse --short HEAD) mike deploy --push --update-aliases "$VERSION"
 
   upload_to_artifacts:
     needs: deploy_to_branch

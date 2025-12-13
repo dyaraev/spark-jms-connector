@@ -65,7 +65,7 @@ jobs:
         run: |
           VERSION=$(echo "${{ github.event.ref }}" | sed 's/[^a-zA-Z0-9-]/-/g')
           if [[ $(mike list "$VERSION") ]]; then
-            mike delete --push "$VERSION"
+            COMMIT_HASH=$(git rev-parse --short HEAD) mike delete --push "$VERSION"
           else
             echo "Version $VERSION does not exist, skipping deletion"
           fi
