@@ -1,0 +1,19 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <meta name="google-site-verification" content="h5dR5ajxYLqOrmrN4wXgr8nfJ3U72XJPLCc-7tFu0zA" />
+    <title>Redirecting</title>
+    <noscript>
+        <meta http-equiv="refresh" content="1; url={{href}}" />
+    </noscript>
+    <script>
+        window.location.replace(
+          "{{href}}" + window.location.search + window.location.hash
+        );
+    </script>
+</head>
+<body>
+Redirecting to <a href="{{href}}">{{href}}</a>...
+</body>
+</html>
