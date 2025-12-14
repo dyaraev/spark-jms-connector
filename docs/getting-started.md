@@ -1,12 +1,5 @@
 # Getting Started
 
-## Requirements
-
-- Java 17
-- Scala 2.12.x
-- Apache Spark 3.5.x
-- Jakarta JMS API 3.1.0
-
 ## Reading from JMS Queue
 
 By default, the JMS source provides `At-Least-Once` delivery guarantee. `Exactly-Once` delivery can be achieved by using specific output formats, for instance, Delta Lake.
@@ -74,8 +67,7 @@ It's important to note that the sink creates one JMS connection per partition wh
 The implementation may not be optimal, as it does not use connection pooling when connecting to JMS brokers.
 
 ```scala
-// Limit to 1 concurrent JMS connection
-df.repartition(1)
+df.repartition(1) // Limit to 1 concurrent JMS connection
   .writeStream
   .format("jms-v2")
   // other options
@@ -98,7 +90,8 @@ sbt "examples/runMain io.github.dyaraev.spark.connector.jms.example.ExampleApp r
 sbt "examples/runMain io.github.dyaraev.spark.connector.jms.example.ExampleApp sender-job --workingDirectory /tmp/spark-sender-job"
 ```
 
-You can play with the example applications by changing the configuration options.
+You can provide Spark and Scala versions to the command in the same way as for [building the artifacts](development.md#building-the-project).
+You can also play with the example applications by changing the configuration options.
 All available options are listed when running commands with the `--help` flag.
 
 Executing examples in an IDE may require the following JVM option to be set: `--add-opens java.base/sun.nio.ch=ALL-UNNAMED`.

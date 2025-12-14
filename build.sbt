@@ -8,7 +8,7 @@ inThisBuild(
     homepage := Some(url("https://github.com/dyaraev/spark-jms-connector")),
     versionScheme := Some("early-semver"),
     scalaVersion := Dependencies.scala213Version,
-    sparkVersion := sys.props.getOrElse("spark.version", Dependencies.spark4Version)
+    sparkVersion := sys.props.getOrElse("spark.version", Dependencies.spark4Version),
   )
 )
 
@@ -46,9 +46,14 @@ lazy val supportedScalaVersions = Def.setting {
 // ===================================== Project settings ===================================== //
 
 lazy val sparkVersionSettings = Seq(
-  Compile / unmanagedSourceDirectories ++= selectSourceDirectory((Compile / sourceDirectory).value, sparkVersion.value),
-  Test / unmanagedSourceDirectories ++= selectSourceDirectory((Test / sourceDirectory).value, sparkVersion.value),
-  libraryDependencies ++= Dependencies.sparkDependencies(sparkVersion.value),
+  Compile / unmanagedSourceDirectories ++= selectSourceDirectory(
+    (Compile / sourceDirectory).value,
+    sparkVersion.value
+  ),
+  Test / unmanagedSourceDirectories ++= selectSourceDirectory(
+    (Test / sourceDirectory).value,
+    sparkVersion.value
+  ),
 )
 
 lazy val commonSettings = Seq(
@@ -86,7 +91,8 @@ lazy val common = (project in file("common"))
   .settings(sparkVersionSettings)
   .settings(
     name := "common",
-    libraryDependencies ++= Dependencies.connector,
+    libraryDependencies ++= Dependencies.connector ++
+      Dependencies.sparkDependencies(sparkVersion.value),
   )
 
 lazy val connectorV1 = (project in file("connector-v1"))
@@ -96,7 +102,8 @@ lazy val connectorV1 = (project in file("connector-v1"))
   .settings(sparkVersionSettings)
   .settings(
     name := "connector-v1",
-    libraryDependencies ++= Dependencies.connector,
+    libraryDependencies ++= Dependencies.connector ++
+      Dependencies.sparkDependencies(sparkVersion.value),
   )
 
 lazy val connectorV2 = (project in file("connector-v2"))
@@ -106,7 +113,8 @@ lazy val connectorV2 = (project in file("connector-v2"))
   .settings(sparkVersionSettings)
   .settings(
     name := "connector-v2",
-    libraryDependencies ++= Dependencies.connector,
+    libraryDependencies ++= Dependencies.connector ++
+      Dependencies.sparkDependencies(sparkVersion.value),
   )
 
 lazy val providerActiveMq = (project in file("provider-activemq"))
@@ -127,7 +135,8 @@ lazy val examples = (project in file("examples"))
     name := "examples",
     run / fork := true,
     run / javaOptions ++= Seq("--add-exports", "java.base/sun.nio.ch=ALL-UNNAMED"),
-    libraryDependencies ++= Dependencies.examples,
+    libraryDependencies ++= Dependencies.examples ++
+      Dependencies.sparkDependencies(sparkVersion.value, provided = false),
   )
 
 // ===================================== Helper functions ===================================== //
