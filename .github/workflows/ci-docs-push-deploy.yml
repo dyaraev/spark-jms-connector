@@ -41,11 +41,13 @@ jobs:
         with:
           fetch-depth: 0  # Fetch all history for mike
 
-      - name: Retrieve SHA of gh-pages branch
-        id: pages
+      - name: Retrieve job configuration
+        id: configure
         run: |
           LATEST_SHA=$(git ls-remote origin refs/heads/gh-pages | awk '{print $1}')
           echo "revision=$LATEST_SHA" >> $GITHUB_OUTPUT
+          VERSION=$(sbt -Dsbt.log.noformat=true "print version" | tail -n 1 | xargs)
+          echo "version=$VERSION" >> $GITHUB_OUTPUT
 
       - name: Setup Python
         uses: actions/setup-python@v5
@@ -56,7 +58,7 @@ jobs:
         uses: actions/cache@v4
         with:
           path: .cache
-          key: mkdocs-${{ steps.pages.outputs.revision }}
+          key: mkdocs-${{ steps.configure.outputs.revision }}
           restore-keys: |
             mkdocs-
 
@@ -94,8 +96,14 @@ jobs:
       - name: Deploy release documentation
         if: ${{ github.event_name == 'release' }}
         run: |
-          VERSION="${{ github.event.release.tag_name }}"
-          mike deploy --push --update-aliases "$VERSION"
+          RELEASE_VERSION="${{ github.event.release.tag_name }}"
+          PROJECT_VERSION="${{ steps.configure.outputs.version }}"
+          if [[ "$RELEASE_VERSION" == "v$PROJECT_VERSION" ]]; then
+            mike deploy --push --update-aliases "${PROJECT_VERSION}"
+          else
+            echo "Wrong tag ${RELEASE_VERSION} for project version ${PROJECT_VERSION}"
+            exit 1
+          fi
 
   upload_to_artifacts:
     needs: deploy_to_branch
