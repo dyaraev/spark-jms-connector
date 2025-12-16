@@ -1,0 +1,35 @@
+Jinja2==3.1.6 # via mike, mkdocs-material
+Markdown==3.9 # via mike, mkdocs-material
+MarkupSafe==3.0.3 # via mike, mkdocs-material
+PyYAML==6.0.3 # via mike, mkdocs-material
+Pygments==2.19.2 # via mkdocs-material
+babel==2.17.0 # via mkdocs-material
+backrefs==6.1 # via mkdocs-material
+certifi==2025.11.12 # via mkdocs-material
+charset-normalizer==3.4.4 # via mkdocs-material
+click==8.1.8 # via mike, mkdocs-material
+colorama==0.4.6 # via mkdocs-material
+ghp-import==2.1.0 # via mike, mkdocs-material
+idna==3.11 # via mkdocs-material
+importlib_metadata==8.7.0 # via mike, mkdocs-material
+importlib_resources==6.5.2 # via mike
+mergedeep==1.3.4 # via mike, mkdocs-material
+mike==2.1.3
+mkdocs-get-deps==0.2.0 # via mike, mkdocs-material
+mkdocs-material-extensions==1.3.1
+mkdocs-material==9.7.0
+mkdocs==1.6.1 # via mike, mkdocs-material
+packaging==25.0 # via mike, mkdocs-material
+paginate==0.5.7 # via mkdocs-material
+pathspec==0.12.1 # via mike, mkdocs-material
+platformdirs==4.4.0 # via mike, mkdocs-material
+pymdown-extensions==10.17.1 # via mkdocs-material
+pyparsing==3.2.5 # via mike
+python-dateutil==2.9.0.post0 # via mike, mkdocs-material
+pyyaml_env_tag==1.1 # via mike, mkdocs-material
+requests==2.32.5 # via mkdocs-material
+six==1.17.0 # via mike, mkdocs-material
+urllib3==1.26.6 # via mkdocs-material
+verspec==0.1.0 # via mike
+watchdog==6.0.0 # via mike, mkdocs-material
+zipp==3.23.0 # via mike, mkdocs-material

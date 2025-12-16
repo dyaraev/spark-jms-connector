@@ -1,0 +1,116 @@
+name: Delete Branch Documentation
+
+on:
+  delete:
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  deploy_branch:
+    if: ${{ github.event.ref_type == 'branch' }}
+    runs-on: ubuntu-latest
+
+    concurrency:
+      group: docs-deploy-to-branch
+      cancel-in-progress: false
+
+    permissions:
+      contents: write
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0  # Fetch all history for mike
+
+      - name: Retrieve SHA of gh-pages branch
+        id: pages
+        run: |
+          LATEST_SHA=$(git ls-remote origin refs/heads/gh-pages | awk '{print $1}')
+          echo "revision=$LATEST_SHA" >> $GITHUB_OUTPUT
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: 3.x
+
+      - name: Cache MkDocs build
+        uses: actions/cache@v4
+        with:
+          path: .cache
+          key: mkdocs-${{ steps.pages.outputs.revision }}
+          restore-keys: |
+            mkdocs-
+
+      - name: Cache pip dependencies
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/pip
+          key: pip-${{ hashFiles('requirements-docs.txt') }}
+          restore-keys: |
+            pip-
+
+      - name: Install dependencies
+        run: pip install -r requirements-docs.txt
+
+      - name: Configure Git
+        run: |
+          git config user.name github-actions[bot]
+          git config user.email github-actions[bot]@users.noreply.github.com
+
+      # Delete version when branch is deleted
+      - name: Delete documentation version
+        run: |
+          VERSION=$(echo "${{ github.event.ref }}" | sed 's/[^a-zA-Z0-9-]/-/g')
+          if [[ "$VERSION" != "latest" ]]; then
+            if [[ $(mike list "$VERSION") ]]; then
+              mike delete --push "$VERSION"
+            else
+              echo "Version $VERSION does not exist, skipping deletion"
+            fi
+          fi
+
+  upload_artifacts:
+    needs: deploy_branch
+    runs-on: ubuntu-latest
+
+    permissions:
+      contents: read
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          ref: 'gh-pages'
+          fetch-depth: 1
+
+      - name: Upload static files as artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          name: github-pages-${{ github.run_id }}
+          path: '.'
+
+  deploy_pages:
+    needs: upload_artifacts
+    runs-on: ubuntu-latest
+
+    concurrency:
+      group: docs-deploy-to-pages
+      cancel-in-progress: false
+
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+
+    permissions:
+      pages: write       # allow deploying Pages
+      id-token: write    # required for OIDC auth
+
+    steps:
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4
+        with:
+          artifact_name: github-pages-${{ github.run_id }}
