@@ -1,8 +1,6 @@
 name: Deploy Branch Documentation
 
 on:
-  delete:
-
   push:
     branches: [ main ]
     paths:
