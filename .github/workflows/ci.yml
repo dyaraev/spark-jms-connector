@@ -1,10 +1,35 @@
-name: Build and Release
+name: Build and Release Artifacts
 
 on:
   push:
-    branches: [ "main" ]
+    branches:
+      - main
+    paths:
+      - .github/workflows/ci.yml
+      - common/**
+      - connector-v1/**
+      - connector-v2/**
+      - provider-activemq/**
+      - project/**
+      - build.sbt
+      - scalafix.conf
+      - scalafmt.conf
+      - version.sbt
+
   pull_request:
-    branches: [ "main" ]
+    branches:
+      - main
+    paths:
+      - .github/workflows/ci.yml
+      - common/**
+      - connector-v1/**
+      - connector-v2/**
+      - provider-activemq/**
+      - project/**
+      - build.sbt
+      - scalafix.conf
+      - scalafmt.conf
+      - version.sbt
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
@@ -41,6 +66,7 @@ jobs:
 
     - name: Upload JARs for connector-v1
       uses: actions/upload-artifact@v4
+      if: ${{ github.event_name == 'push' }}
       with:
         name: spark-jms-connector-v1-${{ steps.configure.outputs.version }}.jar
         path: connector-v1/target/scala-2.12/spark-jms-connector-v1-${{ steps.configure.outputs.version }}.jar
@@ -48,6 +74,7 @@ jobs:
 
     - name: Upload JARs for connector-v2
       uses: actions/upload-artifact@v4
+      if: ${{ github.event_name == 'push' }}
       with:
         name: spark-jms-connector-v2-${{ steps.configure.outputs.version }}.jar
         path: connector-v2/target/scala-2.12/spark-jms-connector-v2-${{ steps.configure.outputs.version }}.jar
@@ -55,6 +82,7 @@ jobs:
 
     - name: Upload JARs for provider-activemq
       uses: actions/upload-artifact@v4
+      if: ${{ github.event_name == 'push' }}
       with:
         name: spark-jms-provider-activemq-${{ steps.configure.outputs.version }}.jar
         path: provider-activemq/target/scala-2.12/spark-jms-provider-activemq-${{ steps.configure.outputs.version }}.jar
