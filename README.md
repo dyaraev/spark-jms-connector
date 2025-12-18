@@ -16,7 +16,7 @@ _Please read [the disclaimer](#disclaimer) below before using this connector._
 
 ## Features
 
-- **V1 and V2 APIs Support**: Includes both Spark DataSourceV1 and DataSourceV2 implementations.
+- **V1 and V2 APIs Support**: Includes both Spark DataSource V1 and V2 implementations.
 - **Streaming Source Support**: Reads from JMS queues as Spark streaming sources.
 - **Streaming Sink Support**: Writes Spark streaming data to JMS destinations.
 - **Configurable Message Format**: Supports text and binary formats.
