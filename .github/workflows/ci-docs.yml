@@ -1,0 +1,80 @@
+name: Build and Deploy Documentation
+
+on:
+  push:
+    tags: [ 'v[0-9]+.[0-9]+.[0-9]+' ]
+    branches: [ main ]
+    paths:
+      - docs/**
+      - mkdocs.yml
+      - .github/workflows/ci-docs.yml
+
+  pull_request:
+    branches: [ main ]
+    paths:
+      - docs/**
+      - mkdocs.yml
+      - .github/workflows/ci-docs.yml
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  create_artifact:
+    runs-on: ubuntu-latest
+
+    permissions:
+      contents: read
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0  # Fetch all history for mike
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: 3.x
+
+      - name: Setup cache for pip dependencies
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/pip
+          key: pip-${{ hashFiles('requirements-docs.txt') }}
+          restore-keys: |
+            pip-
+
+      - name: Install pip dependencies
+        run: pip install -r requirements-docs.txt
+
+      - name: Build documentation
+        run: mkdocs build
+
+      - name: Upload documentation files as an artifact
+        uses: actions/upload-pages-artifact@v3
+        if: ${{ github.event_name == 'push' }}
+        with:
+          name: github-pages-${{ github.run_id }}
+          path: site
+
+  deploy_pages:
+    needs: create_artifact
+    runs-on: ubuntu-latest
+    if: ${{ github.event_name == 'push' }}
+
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+
+    permissions:
+      pages: write       # allow deploying Pages
+      id-token: write    # required for OIDC auth
+
+    steps:
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4
+        with:
+          artifact_name: github-pages-${{ github.run_id }}
