@@ -2,7 +2,6 @@ name: Build and Deploy Documentation
 
 on:
   push:
-    tags: [ 'v[0-9]+.[0-9]+.[0-9]+' ]
     branches: [ main ]
     paths:
       - docs/**
@@ -15,6 +14,9 @@ on:
       - docs/**
       - mkdocs.yml
       - .github/workflows/ci-docs.yml
+
+  release:
+    types: [ published ]
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
