@@ -23,7 +23,7 @@ _Please read [the disclaimer](#disclaimer) below before using this connector._
 
 The connector is still in development and may contain bugs and limitations.
 Since it's mostly a proof-of-concept, it's not recommended for production use.
-Some of the limitations include:
+The limitations include the following:
 - JMS connections are not pooled.
 - No full support of the JMS 2.0 specification.
 - Receiving messages from a queue is done in a driver in a single threaded manner, so it may affect performance in distributed environments.
@@ -31,7 +31,17 @@ Some of the limitations include:
 - The number of connections used by the sink component depends on the number of partitions.
 - Connections in the sink component are created for each batch and not reused.
 - The connector uses a fail-fast strategy, so no proper retry logic for failed writes is implemented.
-- Messages are written to the write-ahead log using Java serialization, which may be non-optimal, especially for large messages.
+- Messages are written to the write-ahead log using Java serialization, which may be non-optimal, especially for large messages. Changing the JVM or Spark version can make the write-ahead log unreadable.
+
+## Requirements
+
+- Java 17
+- Scala 2.12.x / 2.13.x (Spark 3.5.x) and 2.13.x (Spark 4.0.1)
+- Apache Spark 3.5.x / 4.0.x
+- Jakarta JMS API 3.1.0
+
+The code has been tested on Java 17, but it may also work with other Java versions depending on the Apache Spark version you use.
+For Spark 3.5.x, the library can be built against Scala 2.12 or 2.13 in contrast to versions for Spark 4.0.x which can only be built against Scala 2.13.
 
 ## License
 
