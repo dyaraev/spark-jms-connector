@@ -142,7 +142,7 @@ jobs:
         if: ${{ github.event_name == 'push' }}
         with:
           name: spark-jms-connector-v1_2.13_spark-4.0.1_${{ steps.configure.outputs.version }}.jar
-          path: connector-v1/target/scala-2.13/spark-jms-connector-v1_2.13_spark-4.0.1_${{ steps.configure.outputs.version }}.jar
+          path: connector-v1/target/scala-2.13/spark-jms-connector-v1_2.13_spark-4.0.1_${{ steps.configure.outputs.version }}.zip
           if-no-files-found: error
 
       - name: Upload JARs for connector-v2 (Scala 2.13)
@@ -150,7 +150,7 @@ jobs:
         if: ${{ github.event_name == 'push' }}
         with:
           name: spark-jms-connector-v2_2.13_spark-4.0.1_${{ steps.configure.outputs.version }}.jar
-          path: connector-v2/target/scala-2.13/spark-jms-connector-v2_2.13_spark-4.0.1_${{ steps.configure.outputs.version }}.jar
+          path: connector-v2/target/scala-2.13/spark-jms-connector-v2_2.13_spark-4.0.1_${{ steps.configure.outputs.version }}.zip
           if-no-files-found: error
 
       - name: Upload JARs for provider-activemq (Scala 2.13)
@@ -158,7 +158,7 @@ jobs:
         if: ${{ github.event_name == 'push' }}
         with:
           name: spark-jms-provider-activemq_2.13_spark-4.0.1_${{ steps.configure.outputs.version }}.jar
-          path: provider-activemq/target/scala-2.13/spark-jms-provider-activemq_2.13_spark-4.0.1_${{ steps.configure.outputs.version }}.jar
+          path: provider-activemq/target/scala-2.13/spark-jms-provider-activemq_2.13_spark-4.0.1_${{ steps.configure.outputs.version }}.zip
           if-no-files-found: error
 
     # Optional: This step uploads information to the GitHub dependency graph and unblocking Dependabot alerts for the repository
