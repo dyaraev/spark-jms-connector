@@ -8,7 +8,7 @@ object Dependencies {
 
   // Default versions
   val defaultScalaVersion: String = scala213Version
-  val defaultSparkVersion: String = "3.5.7"
+  val defaultSparkVersion: String = "4.1.0"
 
   // Connector dependencies
   private val jakartaJmsVersion = "3.1.0"
