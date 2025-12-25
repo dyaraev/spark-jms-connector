@@ -24,6 +24,7 @@ _Please read [the disclaimer](#disclaimer) below before using this connector._
 The connector is still in development and may contain bugs and limitations.
 Since it's mostly a proof-of-concept, it's not recommended for production use.
 The limitations include the following:
+
 - JMS connections are not pooled.
 - No full support of the JMS 2.0 specification.
 - Receiving messages from a queue is done in a driver in a single threaded manner, so it may affect performance in distributed environments.
@@ -55,6 +56,7 @@ By using this project, you agree to the terms outlined in the license.
 This connector should be used with caution in production environments. The author(s) and contributors make no warranties, express or implied, about the completeness, reliability, or suitability of this software for any particular purpose.
 
 **The author(s) accept NO RESPONSIBILITY for any consequences, damages, or losses arising from the use of this software, including but not limited to:**
+
 - Data loss or corruption
 - System failures or downtime
 - Performance issues
@@ -62,6 +64,7 @@ This connector should be used with caution in production environments. The autho
 - Financial losses
 
 **Before deploying to production pipelines:**
+
 - Thoroughly test it in a development/staging environment
 - Implement proper error handling and monitoring
 - Ensure you have adequate backup and recovery procedures
