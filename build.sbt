@@ -7,8 +7,8 @@ inThisBuild(
     developers := List(Developer("dyaraev", "", "", url("https://github.com/dyaraev"))),
     homepage := Some(url("https://github.com/dyaraev/spark-jms-connector")),
     versionScheme := Some("early-semver"),
-    scalaVersion := Dependencies.scala213Version,
-    sparkVersion := sys.props.getOrElse("spark.version", Dependencies.spark4Version),
+    scalaVersion := Dependencies.defaultScalaVersion,
+    sparkVersion := sys.props.getOrElse("spark.version", Dependencies.defaultSparkVersion),
   )
 )
 
@@ -38,7 +38,7 @@ lazy val scala213Options = Seq(
 lazy val supportedScalaVersions = Def.setting {
   sparkVersion.value match {
     case x if x.startsWith("3.5.") => Seq(Dependencies.scala212Version, Dependencies.scala213Version)
-    case x if x.startsWith("4.0.") => Seq(Dependencies.scala213Version)
+    case x if x.startsWith("4.")   => Seq(Dependencies.scala213Version)
     case _                         => sys.error(s"Unsupported Spark version: $version")
   }
 }
@@ -48,11 +48,11 @@ lazy val supportedScalaVersions = Def.setting {
 lazy val sparkVersionSettings = Seq(
   Compile / unmanagedSourceDirectories ++= selectSourceDirectory(
     (Compile / sourceDirectory).value,
-    sparkVersion.value
+    sparkVersion.value,
   ),
   Test / unmanagedSourceDirectories ++= selectSourceDirectory(
     (Test / sourceDirectory).value,
-    sparkVersion.value
+    sparkVersion.value,
   ),
 )
 
@@ -153,6 +153,7 @@ def selectSourceDirectory(baseDir: File, sparkVersion: String): Seq[File] = {
   sparkVersion match {
     case x if x.startsWith("3.5.") => Seq(baseDir / "scala-spark35")
     case x if x.startsWith("4.0.") => Seq(baseDir / "scala-spark40")
+    case x if x.startsWith("4.1.") => Seq(baseDir / "scala-spark41")
     case _                         => Seq.empty
   }
 }

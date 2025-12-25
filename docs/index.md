@@ -36,12 +36,12 @@ The limitations include the following:
 ## Requirements
 
 - Java 17
-- Scala 2.12.x / 2.13.x (Spark 3.5.x) and 2.13.x (Spark 4.0.1)
-- Apache Spark 3.5.x / 4.0.x
+- Scala 2.12.x / 2.13.x (Spark 3.5.x) and 2.13.x (Spark 4.0.x / 4.1.x)
+- Apache Spark 3.5.x / 4.0.x / 4.1.x
 - Jakarta JMS API 3.1.0
 
 The code has been tested on Java 17, but it may also work with other Java versions depending on the Apache Spark version you use.
-For Spark 3.5.x, the library can be built against Scala 2.12 or 2.13 in contrast to versions for Spark 4.0.x which can only be built against Scala 2.13.
+For Spark 3.5.x, the library can be built against Scala 2.12 or 2.13 in contrast to versions for Spark 4.0.x and 4.1.x which can only be built against Scala 2.13.
 
 ## License
 

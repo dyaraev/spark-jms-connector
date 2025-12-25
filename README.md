@@ -26,8 +26,8 @@ _Please read [the disclaimer](#disclaimer) below before using this connector._
 ## Requirements
 
 - Java 17
-- Scala 2.12.x/2.13.x
-- Apache Spark 3.5.x/4.0.1
+- Scala 2.12.x / 2.13.x
+- Apache Spark 3.5.x / 4.0.x / 4.1.x
 - Jakarta JMS API 3.1.0
 
 See more about the requirements in the [documentation](https://dyaraev.github.io/spark-jms-connector/getting-started/#requirements)

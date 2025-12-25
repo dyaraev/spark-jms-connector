@@ -44,7 +44,7 @@ As an example, the `provider-activemq` module offers a simple implementation of 
 
 The project uses a cross-version build.
 During the build process, a Spark version can be provided as an argument, allowing the project to be built for that specific Spark version.
-By default, Spark 4.0.1 is used, which can only be built for Scala 2.13.
+By default, Spark 4.1.0 is used, which — like Spark 4.0.x — can only be built for Scala 2.13.
 Spark 3.5.x, however, supports builds for either Scala 2.12 or Scala 2.13.
 The project can be built using the following sbt command:
 
