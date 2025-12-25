@@ -27,12 +27,12 @@ The limitations include the following:
 
 - JMS connections are not pooled.
 - No full support of the JMS 2.0 specification.
-- Receiving messages from a queue is done in a driver in a single threaded manner, so it may affect performance in distributed environments.
 - Sending messages is done in executors, so every executor task creates its own connection.
 - The number of connections used by the sink component depends on the number of partitions.
 - Connections in the sink component are created for each batch and not reused.
 - The connector uses a fail-fast strategy, so no proper retry logic for failed writes is implemented.
 - Messages are written to the write-ahead log using Java serialization, which may be non-optimal, especially for large messages. Changing the JVM or Spark version can make the write-ahead log unreadable.
+- Receiving messages from a queue is done in a driver in a single threaded manner, so it may affect performance in distributed environments.
 
 ## Requirements
 

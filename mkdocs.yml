@@ -10,8 +10,6 @@ theme:
       primary: orange
       accent: yellow
   features:
-    - navigation.expand
-    - navigation.sections
     - navigation.top
     - search.highlight
     - search.suggest
