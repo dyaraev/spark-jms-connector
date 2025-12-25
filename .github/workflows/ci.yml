@@ -45,16 +45,16 @@ permissions:
 
 jobs:
   build-spark35:
-    uses: ./.github/workflows/build-for-version.yml
+    uses: ./.github/workflows/parameterized/build-for-version.yml
     with:
       spark_version: "3.5.7"
 
   build-spark40:
-    uses: ./.github/workflows/build-for-version.yml
+    uses: ./.github/workflows/parameterized/build-for-version.yml
     with:
       spark_version: "4.0.1"
 
   build-spark41:
-    uses: ./.github/workflows/build-for-version.yml
+    uses: ./.github/workflows/parameterized/build-for-version.yml
     with:
       spark_version: "4.1.0"
