@@ -8,13 +8,13 @@ import io.github.dyaraev.spark.connector.jms.common.metadata.LogEntry.Implicits.
 import io.github.dyaraev.spark.connector.jms.common.metadata.LogEntry.{BinaryLogEntry, TextLogEntry}
 import io.github.dyaraev.spark.connector.jms.common.metadata.{LogEntry, MetadataLog}
 import io.github.dyaraev.spark.connector.jms.common.{ConnectionFactoryProvider, ReceiverTask, SourceSchema}
+import io.github.dyaraev.spark.connector.jms.v2.SparkInternals.SparkLongOffset
 import jakarta.jms.{IllegalStateException, Message}
 import org.apache.spark.internal.Logging
 import org.apache.spark.sql.SparkSession
 import org.apache.spark.sql.catalyst.InternalRow
 import org.apache.spark.sql.connector.read._
 import org.apache.spark.sql.connector.read.streaming.{MicroBatchStream, Offset}
-import org.apache.spark.sql.execution.streaming.LongOffset
 import org.apache.spark.sql.types.StructType
 import org.apache.spark.sql.util.CaseInsensitiveStringMap
 
@@ -70,10 +70,10 @@ object JmsScanBuilder {
     private val metadataLog: MetadataLog[T] = new MetadataLog[T](spark, checkpointLocation)
 
     @GuardedBy("this")
-    private var currentOffset: LongOffset = LongOffset(metadataLog.getLatestBatchId().getOrElse(-1L))
+    private var currentOffset: SparkLongOffset = SparkLongOffset(metadataLog.getLatestBatchId().getOrElse(-1L))
 
     @GuardedBy("this")
-    private var previousOffset: LongOffset = LongOffset(-1L)
+    private var previousOffset: SparkLongOffset = SparkLongOffset(-1L)
 
     @GuardedBy("this")
     private var stopFlag: Boolean = false
@@ -84,7 +84,7 @@ object JmsScanBuilder {
 
     override def initialOffset(): Offset = synchronized {
       logInfo("Resetting offset")
-      currentOffset = LongOffset(-1L)
+      currentOffset = SparkLongOffset(-1L)
       currentOffset
     }
 
@@ -97,8 +97,8 @@ object JmsScanBuilder {
     }
 
     override def planInputPartitions(start: Offset, end: Offset): Array[InputPartition] = {
-      val startOrdinal = start.asInstanceOf[LongOffset].offset + 1
-      val endOrdinal = end.asInstanceOf[LongOffset].offset
+      val startOrdinal = start.asInstanceOf[SparkLongOffset].offset + 1
+      val endOrdinal = end.asInstanceOf[SparkLongOffset].offset
 
       val rawList = synchronized {
         if (endOrdinal - startOrdinal >= 0) {
@@ -134,7 +134,7 @@ object JmsScanBuilder {
 
     override def commit(end: Offset): Unit = synchronized {
       end match {
-        case currentOffset: LongOffset =>
+        case currentOffset: SparkLongOffset =>
           val diff = currentOffset.offset - previousOffset.offset
           if (diff < 0) throw new IllegalStateException(s"Offsets out of order [$previousOffset, $currentOffset]")
           metadataLog.purge(currentOffset.offset - config.numOffsetsToKeep)
@@ -147,7 +147,7 @@ object JmsScanBuilder {
       stopFlag = true
     }
 
-    override def deserializeOffset(json: String): Offset = LongOffset(json.toLong)
+    override def deserializeOffset(json: String): Offset = SparkLongOffset(json.toLong)
 
     override def toString: String = s"JmsSourceV2[$identifier]"
 

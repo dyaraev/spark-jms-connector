@@ -1,4 +1,4 @@
-package org.apache.spark.sql.jms
+package io.github.dyaraev.spark.connector.jms.v1
 
 import io.github.dyaraev.spark.connector.jms.common.SourceSchema
 import io.github.dyaraev.spark.connector.jms.common.config.MessageFormat.{BinaryFormat, TextFormat}

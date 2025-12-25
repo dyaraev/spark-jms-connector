@@ -1,15 +1,16 @@
-package org.apache.spark.sql.jms
+package io.github.dyaraev.spark.connector.jms.v1
 
 import io.github.dyaraev.spark.connector.jms.common.SourceSchema
 import io.github.dyaraev.spark.connector.jms.common.client.JmsSinkClient
 import io.github.dyaraev.spark.connector.jms.common.config.JmsSinkConfig
 import io.github.dyaraev.spark.connector.jms.common.config.MessageFormat.{BinaryFormat, TextFormat}
+import io.github.dyaraev.spark.connector.jms.v1.JmsSink.{MaxSendAttempts, MinRetryInterval}
 import org.apache.spark.internal.Logging
 import org.apache.spark.sql.DataFrame
 import org.apache.spark.sql.catalyst.expressions.{Attribute, Cast, Expression, UnsafeProjection}
 import org.apache.spark.sql.execution.QueryExecution
 import org.apache.spark.sql.execution.streaming.Sink
-import org.apache.spark.sql.jms.JmsSink.{MaxSendAttempts, MinRetryInterval}
+import org.apache.spark.sql.jms.SparkInternals
 import org.apache.spark.sql.types.{BinaryType, DataType, StringType}
 
 import scala.annotation.tailrec
@@ -70,7 +71,7 @@ class JmsSink(config: JmsSinkConfig) extends Sink with Serializable with Logging
 
   private def valueExpression(schema: Seq[Attribute], dataTypes: Seq[DataType]): Expression = {
     schema.find(_.name == SourceSchema.FieldValue) match {
-      case Some(expr) if dataTypes.exists(_.sameType(expr.dataType)) => expr
+      case Some(expr) if dataTypes.exists(dt => SparkInternals.sameTypes(dt, expr.dataType)) => expr
       case Some(expr) => throw new RuntimeException(s"Wrong value data type ${expr.dataType}")
       case None       => throw new RuntimeException("Missing field value")
     }

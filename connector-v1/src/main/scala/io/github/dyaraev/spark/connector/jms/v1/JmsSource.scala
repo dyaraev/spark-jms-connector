@@ -1,4 +1,4 @@
-package org.apache.spark.sql.jms
+package io.github.dyaraev.spark.connector.jms.v1
 
 import io.github.dyaraev.spark.connector.jms.common.client.JmsSourceClient
 import io.github.dyaraev.spark.connector.jms.common.config.JmsSourceConfig
@@ -7,8 +7,9 @@ import io.github.dyaraev.spark.connector.jms.common.{ConnectionFactoryProvider, 
 import jakarta.jms.Message
 import org.apache.spark.internal.Logging
 import org.apache.spark.sql.catalyst.InternalRow
-import org.apache.spark.sql.classic.ClassicConversions.castToImpl
-import org.apache.spark.sql.execution.streaming.{LongOffset, Offset, SerializedOffset, Source}
+import org.apache.spark.sql.execution.streaming.{Offset, Source}
+import org.apache.spark.sql.jms.SparkInternals
+import org.apache.spark.sql.jms.SparkInternals.{SparkLongOffset, SparkSerializedOffset}
 import org.apache.spark.sql.types._
 import org.apache.spark.sql.{DataFrame, SQLContext}
 
@@ -31,7 +32,7 @@ class JmsSource[T <: LogEntry: ClassTag](
   private val metadataLog: MetadataLog[T] = new MetadataLog[T](sqlContext.sparkSession, metadataPath)
 
   @GuardedBy("this")
-  private var currentOffset: Option[LongOffset] = metadataLog.getLatestBatchId().map(LongOffset(_))
+  private var currentOffset: Option[SparkLongOffset] = metadataLog.getLatestBatchId().map(SparkLongOffset(_))
 
   @GuardedBy("this")
   private var stopFlag = false
@@ -58,7 +59,7 @@ class JmsSource[T <: LogEntry: ClassTag](
       val logData = metadataLog.get(startOffset, Some(endOrdinal)).flatMap(_._2)
       sqlContext.sparkContext.makeRDD(logData.map(_.toInternalRow).toIndexedSeq)
     }
-    sqlContext.internalCreateDataFrame(rdd, schema, isStreaming = true)
+    SparkInternals.createDataFrame(sqlContext, rdd, schema, isStreaming = true)
   }
 
   override def stop(): Unit = synchronized {
@@ -66,9 +67,9 @@ class JmsSource[T <: LogEntry: ClassTag](
     stopFlag = true
   }
 
-  private def deserializeOffset(offset: Offset): LongOffset = offset match {
-    case o: LongOffset       => o
-    case o: SerializedOffset => LongOffset(o.json.toLong)
+  private def deserializeOffset(offset: Offset): SparkLongOffset = offset match {
+    case o: SparkLongOffset       => o
+    case o: SparkSerializedOffset => SparkLongOffset(o.json.toLong)
   }
 
   private def initialize(): Unit = {
@@ -81,7 +82,7 @@ class JmsSource[T <: LogEntry: ClassTag](
       }
 
       override protected def walCommit(messages: Array[Message]): Unit = JmsSource.this.synchronized {
-        currentOffset = currentOffset.map(_ + 1).orElse(Some(LongOffset(0L)))
+        currentOffset = currentOffset.map(_ + 1).orElse(Some(SparkLongOffset(0L)))
         logDebug(s"Updated current offset to $currentOffset")
 
         currentOffset.foreach(offset => logInfo(s"Writing data to the WAL for offset $offset ..."))
