@@ -73,6 +73,7 @@ _More information about the connector and its configuration can be found in the 
 This connector should be used with caution in production environments. The author(s) and contributors make no warranties, express or implied, about the completeness, reliability, or suitability of this software for any particular purpose.
 
 **The author(s) accept NO RESPONSIBILITY for any consequences, damages, or losses arising from the use of this software, including but not limited to:**
+
 - Data loss or corruption
 - System failures or downtime
 - Performance issues
@@ -80,6 +81,7 @@ This connector should be used with caution in production environments. The autho
 - Financial losses
 
 **Before deploying to production pipelines:**
+
 - Thoroughly test it in a development/staging environment
 - Implement proper error handling and monitoring
 - Ensure you have adequate backup and recovery procedures
