@@ -1,4 +1,4 @@
-name: Build and Release Artifacts
+name: Build Artifacts for Multiple Spark Versions
 
 on:
   push:

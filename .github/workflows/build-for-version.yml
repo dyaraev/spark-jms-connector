@@ -1,4 +1,4 @@
-name: Build and Release Artifacts
+name: Build Artifacts for Specific Spark Version
 
 on:
   workflow_call:
