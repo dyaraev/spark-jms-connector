@@ -15,9 +15,6 @@ on:
       - mkdocs.yml
       - .github/workflows/ci-docs.yml
 
-  release:
-    types: [ published ]
-
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: true
@@ -57,7 +54,7 @@ jobs:
 
       - name: Upload documentation files as an artifact
         uses: actions/upload-pages-artifact@v3
-        if: ${{ github.event_name == 'push' || github.event_name == 'release' }}
+        if: ${{ github.event_name == 'push' }}
         with:
           name: github-pages-${{ github.run_id }}
           path: site
@@ -65,7 +62,7 @@ jobs:
   deploy_pages:
     needs: create_artifact
     runs-on: ubuntu-latest
-    if: ${{ github.event_name == 'push' || github.event_name == 'release' }}
+    if: ${{ github.event_name == 'push' }}
 
     environment:
       name: github-pages
