@@ -6,7 +6,7 @@ on:
       - main
     paths:
       - .github/workflows/ci.yml
-      - .github/workflows/build-for-version.yml
+      - .github/workflows/parameterized/build-for-version.yml
       - common/**
       - connector-v1/**
       - connector-v2/**
@@ -22,7 +22,7 @@ on:
       - main
     paths:
       - .github/workflows/ci.yml
-      - .github/workflows/build-for-version.yml
+      - .github/workflows/parameterized/build-for-version.yml
       - common/**
       - connector-v1/**
       - connector-v2/**
@@ -32,6 +32,9 @@ on:
       - scalafix.conf
       - scalafmt.conf
       - version.sbt
+
+  release:
+    types: [published]
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
