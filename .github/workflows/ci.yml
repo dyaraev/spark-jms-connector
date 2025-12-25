@@ -6,7 +6,7 @@ on:
       - main
     paths:
       - .github/workflows/ci.yml
-      - .github/workflows/build-for-version.yml
+      - .github/workflows/parameterized-build.yml
       - common/**
       - connector-v1/**
       - connector-v2/**
@@ -22,7 +22,7 @@ on:
       - main
     paths:
       - .github/workflows/ci.yml
-      - .github/workflows/build-for-version.yml
+      - .github/workflows/parameterized-build.yml
       - common/**
       - connector-v1/**
       - connector-v2/**
@@ -33,6 +33,9 @@ on:
       - scalafmt.conf
       - version.sbt
 
+  release:
+    types: [published]
+
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: ${{ github.event_name == 'pull_request' }}
@@ -42,16 +45,16 @@ permissions:
 
 jobs:
   build-spark35:
-    uses: ./.github/workflows/build-for-version.yml
+    uses: ./.github/workflows/parameterized-build.yml
     with:
       spark_version: "3.5.7"
 
   build-spark40:
-    uses: ./.github/workflows/build-for-version.yml
+    uses: ./.github/workflows/parameterized-build.yml
     with:
       spark_version: "4.0.1"
 
   build-spark41:
-    uses: ./.github/workflows/build-for-version.yml
+    uses: ./.github/workflows/parameterized-build.yml
     with:
       spark_version: "4.1.0"

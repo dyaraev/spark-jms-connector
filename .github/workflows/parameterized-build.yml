@@ -35,7 +35,7 @@ jobs:
 
     - name: Upload JARs for connector-v1 (Scala 2.12)
       uses: actions/upload-artifact@v4
-      if: ${{ startsWith(inputs.spark_version, '3.') && github.event_name == 'push' }}
+      if: ${{ startsWith(inputs.spark_version, '3.') && github.event_name == 'release' }}
       with:
         name: spark-jms-connector-v1_2.12_spark-${{ inputs.spark_version }}_${{ steps.configure.outputs.version }}.zip
         path: connector-v1/target/scala-2.12/spark-jms-connector-v1_2.12_spark-${{ inputs.spark_version }}_${{ steps.configure.outputs.version }}.jar
@@ -43,7 +43,7 @@ jobs:
 
     - name: Upload JARs for connector-v1 (Scala 2.13)
       uses: actions/upload-artifact@v4
-      if: ${{ github.event_name == 'push' }}
+      if: ${{ github.event_name == 'release' }}
       with:
         name: spark-jms-connector-v1_2.13_spark-${{ inputs.spark_version }}_${{ steps.configure.outputs.version }}.zip
         path: connector-v1/target/scala-2.13/spark-jms-connector-v1_2.13_spark-${{ inputs.spark_version }}_${{ steps.configure.outputs.version }}.jar
@@ -51,7 +51,7 @@ jobs:
 
     - name: Upload JARs for connector-v2 (Scala 2.12)
       uses: actions/upload-artifact@v4
-      if: ${{ startsWith(inputs.spark_version, '3.') && github.event_name == 'push' }}
+      if: ${{ startsWith(inputs.spark_version, '3.') && github.event_name == 'release' }}
       with:
         name: spark-jms-connector-v2_2.12_spark-${{ inputs.spark_version }}_${{ steps.configure.outputs.version }}.zip
         path: connector-v2/target/scala-2.12/spark-jms-connector-v2_2.12_spark-${{ inputs.spark_version }}_${{ steps.configure.outputs.version }}.jar
@@ -59,7 +59,7 @@ jobs:
 
     - name: Upload JARs for connector-v2 (Scala 2.13)
       uses: actions/upload-artifact@v4
-      if: ${{ github.event_name == 'push' }}
+      if: ${{ github.event_name == 'release' }}
       with:
         name: spark-jms-connector-v2_2.13_spark-${{ inputs.spark_version }}_${{ steps.configure.outputs.version }}.zip
         path: connector-v2/target/scala-2.13/spark-jms-connector-v2_2.13_spark-${{ inputs.spark_version }}_${{ steps.configure.outputs.version }}.jar
@@ -67,7 +67,7 @@ jobs:
 
     - name: Upload JARs for provider-activemq (Scala 2.12)
       uses: actions/upload-artifact@v4
-      if: ${{ startsWith(inputs.spark_version, '3.') && github.event_name == 'push' }}
+      if: ${{ startsWith(inputs.spark_version, '3.') && github.event_name == 'release' }}
       with:
         name: spark-jms-provider-activemq_2.12_spark-${{ inputs.spark_version }}_${{ steps.configure.outputs.version }}.zip
         path: provider-activemq/target/scala-2.12/spark-jms-provider-activemq_2.12_spark-${{ inputs.spark_version }}_${{ steps.configure.outputs.version }}.jar
@@ -75,7 +75,7 @@ jobs:
 
     - name: Upload JARs for provider-activemq (Scala 2.13)
       uses: actions/upload-artifact@v4
-      if: ${{ github.event_name == 'push' }}
+      if: ${{ github.event_name == 'release' }}
       with:
         name: spark-jms-provider-activemq_2.13_spark-${{ inputs.spark_version }}_${{ steps.configure.outputs.version }}.zip
         path: provider-activemq/target/scala-2.13/spark-jms-provider-activemq_2.13_spark-${{ inputs.spark_version }}_${{ steps.configure.outputs.version }}.jar
