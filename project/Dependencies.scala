@@ -8,7 +8,7 @@ object Dependencies {
 
   // Default versions
   val defaultScalaVersion: String = scala213Version
-  val defaultSparkVersion: String = "4.1.0"
+  val defaultSparkVersion: String = "4.1.1"
 
   // Connector dependencies
   private val jakartaJmsVersion = "3.1.0"
@@ -22,12 +22,12 @@ object Dependencies {
   private val declineEffectVersion = "2.5.0"
   private val scalaLoggingVersion = "3.9.6"
 
-  lazy val connector = Seq(
+  lazy val connector: Seq[ModuleID] = Seq(
     "jakarta.jms" % "jakarta.jms-api" % jakartaJmsVersion,
     "org.scalatest" %% "scalatest" % scalaTestVersion % Test,
   )
 
-  lazy val providerActiveMq = Seq(
+  lazy val providerActiveMq: Seq[ModuleID] = Seq(
     "org.apache.activemq" % "activemq-broker" % activeMqVersion excludeAll (
       ExclusionRule("com.fasterxml.jackson.module", "jackson-module-scala"),
       ExclusionRule("com.fasterxml.jackson.core", "jackson-databind"),
@@ -40,7 +40,7 @@ object Dependencies {
     ),
   )
 
-  lazy val examples = Seq(
+  lazy val examples: Seq[ModuleID] = Seq(
     "com.fasterxml.jackson.module" %% "jackson-module-scala" % jacksonVersion,
     "com.fasterxml.jackson.core" % "jackson-databind" % jacksonVersion,
     "com.monovore" %% "decline-effect" % declineEffectVersion,

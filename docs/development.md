@@ -44,7 +44,7 @@ As an example, the `provider-activemq` module offers a simple implementation of 
 
 The project uses a cross-version build.
 During the build process, a Spark version can be provided as an argument, allowing the project to be built for that specific Spark version.
-By default, Spark 4.1.0 is used, which — like Spark 4.0.x — can only be built for Scala 2.13.
+By default, Spark 4.1.1 is used, which — like Spark 4.0.x — can only be built for Scala 2.13.
 Spark 3.5.x, however, supports builds for either Scala 2.12 or Scala 2.13.
 The project can be built using the following sbt command:
 
@@ -54,17 +54,17 @@ sbt +assembly
 Or for specific Spark and Scala versions:
 
 ```bash
-# for Spark 4.0.1 and Scala 2.13
-sbt -Dspark.version=4.0.1 +assembly
+# for Spark 4.1.1 and Scala 2.13
+sbt -Dspark.version=4.1.1 +assembly
 
-# for Spark 3.5.7 and both Scala 2.12 and Scala 2.13
-sbt -Dspark.version=3.5.7 +assembly
+# for Spark 3.5.8 and both Scala 2.12 and Scala 2.13
+sbt -Dspark.version=3.5.8 +assembly
 
-# for Spark 3.5.7 and Scala 2.12
-sbt ++2.12 -Dspark.version=3.5.7 assembly
+# for Spark 3.5.8 and Scala 2.12
+sbt ++2.12 -Dspark.version=3.5.8 assembly
 
-# for Spark 3.5.7 and Scala 2.13
-sbt ++2.13 -Dspark.version=3.5.7 assembly
+# for Spark 3.5.8 and Scala 2.13
+sbt ++2.13 -Dspark.version=3.5.8 assembly
 ```
 
 These command will create the following JAR files with specific version instead of placeholders depending on the build configuration:
@@ -75,9 +75,9 @@ These command will create the following JAR files with specific version instead 
 
 For example:
 
-- `connector-v1/target/scala-2.13/spark-jms-connector-v1_2.13_spark-4.0.1_0.1.1.jar`
-- `connector-v2/target/scala-2.13/spark-jms-connector-v2_2.13_spark-4.0.1_0.1.1.jar`
-- `provider-activemq/target/scala-2.13/spark-jms-provider-activemq_2.13_4.0.1_0.1.1.jar`
+- `connector-v1/target/scala-2.13/spark-jms-connector-v1_2.13_spark-4.1.1_0.1.5.jar`
+- `connector-v2/target/scala-2.13/spark-jms-connector-v2_2.13_spark-4.1.1_0.1.5.jar`
+- `provider-activemq/target/scala-2.13/spark-jms-provider-activemq_2.13_4.1.1_0.1.5.jar`
 
 ## Contributing
 

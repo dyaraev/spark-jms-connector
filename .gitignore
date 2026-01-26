@@ -1,14 +1,23 @@
 ### IDE and development tools ###
-
 *.class
 *.log
 .idea
 .bsp
 .bloop
+.cache
 .vscode
 .project
 .settings/
 target/
 
+### Apache Spark ###
+spark-warehouse/
+
+### MkDocs ###
+site/
+
 ### Mac OS ###
 .DS_Store
+
+# Virtual environments
+.venv

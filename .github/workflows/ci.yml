@@ -47,7 +47,7 @@ jobs:
   build-spark35:
     uses: ./.github/workflows/parameterized-build.yml
     with:
-      spark_version: "3.5.7"
+      spark_version: "3.5.8"
 
   build-spark40:
     uses: ./.github/workflows/parameterized-build.yml
@@ -57,4 +57,4 @@ jobs:
   build-spark41:
     uses: ./.github/workflows/parameterized-build.yml
     with:
-      spark_version: "4.1.0"
+      spark_version: "4.1.1"
