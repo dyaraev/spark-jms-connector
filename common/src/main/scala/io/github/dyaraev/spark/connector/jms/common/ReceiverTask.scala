@@ -11,17 +11,12 @@ import scala.util.control.NonFatal
 abstract class ReceiverTask(
     client: JmsSourceClient,
     bufferSize: Int,
-    timeoutMs: Option[Long],
+    timeoutMs: Long,
     commitIntervalMs: Long,
 ) extends Runnable
     with Logging {
 
   private val messageBuffer: ArrayBuffer[Message] = ArrayBuffer.empty[Message]
-
-  private val receive: () => Message = timeoutMs match {
-    case Some(timeout) => () => client.receive(timeout)
-    case None          => () => client.receiveNoWait
-  }
 
   protected def shouldStop(): Boolean = false
 
@@ -44,7 +39,7 @@ abstract class ReceiverTask(
   @tailrec
   final private def receiveAndPersist(lastBatchTimeMs: Long): Unit = {
     if (!shouldStop()) {
-      val message = receive()
+      val message = client.receive(timeoutMs)
       if (message != null) messageBuffer += message
 
       // the processing time for `updateLog` should be less than `logIntervalMs`

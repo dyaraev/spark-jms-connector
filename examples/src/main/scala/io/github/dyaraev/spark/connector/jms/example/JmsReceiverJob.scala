@@ -3,7 +3,6 @@ package io.github.dyaraev.spark.connector.jms.example
 import io.github.dyaraev.spark.connector.jms.common.config.{JmsConnectionConfig, JmsSourceConfig, MessageFormat}
 import io.github.dyaraev.spark.connector.jms.example.JmsReceiverJob.JmsReceiverJobConfig
 import io.github.dyaraev.spark.connector.jms.example.utils.ActiveMqBroker.ActiveMqAddress
-import io.github.dyaraev.spark.connector.jms.example.utils.Implicits.LetSyntax
 import io.github.dyaraev.spark.connector.jms.provider.activemq.ActiveMqConfig
 import org.apache.spark.sql.SparkSession
 import org.apache.spark.sql.streaming.{StreamingQuery, Trigger}
@@ -27,7 +26,6 @@ class JmsReceiverJob(config: JmsReceiverJobConfig) {
       .option(JmsSourceConfig.OptionMessageFormat, MessageFormat.TextFormat.name)
       .option(JmsSourceConfig.OptionCommitIntervalMs, config.commitInterval.toMillis)
       .option(JmsSourceConfig.OptionNumPartitions, config.numPartitions.toString)
-      .let(r => config.receiveTimeout.fold(r)(t => r.option(JmsSourceConfig.OptionReceiveTimeoutMs, t.toMillis)))
       .option(ActiveMqConfig.OptionsJmsBrokerUrl, config.brokerAddress.toString)
       .load()
       .repartition(1)

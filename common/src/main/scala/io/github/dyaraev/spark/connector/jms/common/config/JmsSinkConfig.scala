@@ -5,7 +5,7 @@ import io.github.dyaraev.spark.connector.jms.common.config.CaseInsensitiveConfig
 case class JmsSinkConfig(
     connection: JmsConnectionConfig,
     messageFormat: MessageFormat,
-    throttlingDelayMs: Option[Int],
+    throttlingDelayMs: Option[Long],
 ) {
 
   def validate(): Unit = {
@@ -25,7 +25,7 @@ object JmsSinkConfig {
     val config = JmsSinkConfig(
       connection.getOrElse(JmsConnectionConfig.fromOptions(options)),
       options.getRequired[MessageFormat](OptionMessageFormat),
-      options.getOptional[Int](OptionThrottlingDelayMs),
+      options.getOptional[Long](OptionThrottlingDelayMs),
     )
     config.validate()
     config
