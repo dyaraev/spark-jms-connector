@@ -22,13 +22,13 @@ class JmsReceiverJob(config: JmsReceiverJobConfig) {
   private def runQuery(spark: SparkSession): StreamingQuery = {
     spark.readStream
       .format(config.sourceFormat)
+      .option(JmsConnectionConfig.OptionBrokerName, ActiveMqConnectionFactoryProvider.BrokerName)
       .option(JmsConnectionConfig.OptionQueueName, config.queueName)
-      .option(JmsConnectionConfig.OptionFactoryProvider, classOf[ActiveMqConnectionFactoryProvider].getName)
       .option(JmsSourceConfig.OptionMessageFormat, MessageFormat.TextFormat.name)
       .option(JmsSourceConfig.OptionCommitIntervalMs, config.commitInterval.toMillis)
       .option(JmsSourceConfig.OptionNumPartitions, config.numPartitions.toString)
       .let(r => config.receiveTimeout.fold(r)(t => r.option(JmsSourceConfig.OptionReceiveTimeoutMs, t.toMillis)))
-      .option(ActiveMqConfig.OptionsJmsBrokerAddress, config.brokerAddress.toString)
+      .option(ActiveMqConfig.OptionsJmsBrokerUrl, config.brokerAddress.toString)
       .load()
       .repartition(1)
       .writeStream

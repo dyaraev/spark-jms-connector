@@ -31,7 +31,7 @@ jobs:
         echo "version=$VERSION" >> $GITHUB_OUTPUT
 
     - name: Run checks and build JARs
-      run: sbt -Dspark.version=${{ inputs.spark_version }} +clean +compile +scalafmtCheck "+scalafix --check" +assembly
+      run: sbt -Dspark.version=${{ inputs.spark_version }} +clean +test +compile +scalafmtCheck "+scalafix --check" +assembly
 
     - name: Upload JARs for connector-v1 (Scala 2.12)
       uses: actions/upload-artifact@v4

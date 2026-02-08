@@ -44,7 +44,7 @@ object JmsSinkClient extends Logging {
       config: JmsConnectionConfig,
       transacted: Boolean,
   ): JmsSinkClient = {
-    val provider = ConnectionFactoryProvider.createInstance(config.factoryProvider)
+    val provider = ConnectionFactoryProvider.createInstanceByBrokerName(config.brokerName)
     val factory = provider.getConnectionFactory(config.brokerOptions)
     JmsSinkClient(factory, config.queueName, config.username, config.password, transacted)
   }

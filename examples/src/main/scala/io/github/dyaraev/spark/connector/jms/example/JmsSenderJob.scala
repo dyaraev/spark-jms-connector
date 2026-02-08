@@ -30,10 +30,10 @@ class JmsSenderJob(schema: StructType, config: JmsSenderJobConfig) {
       .repartition(1)
       .writeStream
       .format(config.sinkFormat)
-      .option(JmsSinkConfig.OptionMessageFormat, MessageFormat.TextFormat.name)
+      .option(JmsConnectionConfig.OptionBrokerName, ActiveMqConnectionFactoryProvider.BrokerName)
       .option(JmsConnectionConfig.OptionQueueName, config.queueName)
-      .option(JmsConnectionConfig.OptionFactoryProvider, classOf[ActiveMqConnectionFactoryProvider].getName)
-      .option(ActiveMqConfig.OptionsJmsBrokerAddress, config.brokerAddress.toString)
+      .option(JmsSinkConfig.OptionMessageFormat, MessageFormat.TextFormat.name)
+      .option(ActiveMqConfig.OptionsJmsBrokerUrl, config.brokerAddress.toString)
       .trigger(Trigger.ProcessingTime(config.processingTime.toMillis))
       .option("checkpointLocation", config.checkpointPath.toString)
       .queryName(JmsSenderJob.QueryName)

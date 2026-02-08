@@ -30,7 +30,7 @@ _Please read [the disclaimer](#disclaimer) below before using this connector._
 - Apache Spark 3.5.x / 4.0.x / 4.1.x
 - Jakarta JMS API 3.1.0
 
-See more about the requirements in the [documentation](https://dyaraev.github.io/spark-jms-connector/getting-started/#requirements)
+_See more about the requirements in the [documentation](https://dyaraev.github.io/spark-jms-connector/getting-started/#requirements)._
 
 ## Usage Examples
 
@@ -39,13 +39,12 @@ See more about the requirements in the [documentation](https://dyaraev.github.io
 ```scala
 val df = spark.readStream
   .format("jms-v2") // or "jms-v1" depending on the used implementation
+  .option("jms.connection.broker.name", "my-broker")
   .option("jms.connection.queueName", "myQueue")
-  .option("jms.connection.factoryProvider", "com.example.MyConnectionFactoryProvider")
-  // broker specific options for the provided connection factory implementation
-  .option("jms.source.messageFormat", "text")
-  .option("jms.source.receiveTimeoutMs", "1000")
-  .option("jms.source.commitIntervalMs", "10000")
-  .option("jms.source.numPartitions", "8")
+  .option("jms.messageFormat", "text")
+  .option("jms.receiveTimeoutMs", "1000")
+  .option("jms.commitIntervalMs", "10000")
+  .option("jms.numPartitions", "8")
   .load()
 ```
 
@@ -54,10 +53,9 @@ val df = spark.readStream
 ```scala 
 df.writeStream
   .format("jms-v2") // or "jms-v1" depending on the used implementation
+  .option("jms.connection.broker.name", "my-broker")
   .option("jms.connection.queueName", "myQueue")
-  .option("jms.connection.factoryProvider", "com.example.MyConnectionFactoryProvider")
-  // broker specific options for the provided connection factory implementation
-  .option("jms.sink.messageFormat", "text")
+  .option("jms.messageFormat", "text")
   .option("checkpointLocation", "/tmp/checkpoint")
   .trigger(Trigger.ProcessingTime("10 seconds"))
   .start()

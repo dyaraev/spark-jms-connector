@@ -11,7 +11,7 @@ The resulting DataFrame schema returned by the source consists of the following 
 - `StructField("received", LongType)` - Timestamp when the message was received by the connector.
 - `StructField("value", <type>)` - Message content (see below for the type of the field).
 
-The `value` field type depends on the `jms.source.messageFormat` option:
+The `value` field type depends on the `jms.messageFormat` option:
 
 - When set to `text`: expects `TextMessage` and the value field is of type `StringType` (text content)
 - When set to `binary`: expects `BytesMessage` and the value field is of type `BinaryType` (byte array)
@@ -21,13 +21,12 @@ This is an example of how to use the connector to read data from a JMS queue:
 ```scala
 val df = spark.readStream
   .format("jms-v2") // or "jms-v1" depending on the used implementation
+  .option("jms.connection.broker.name", "my-broker")
   .option("jms.connection.queueName", "myQueue")
-  .option("jms.connection.factoryProvider", "com.example.MyConnectionFactoryProvider")
-  // broker specific options for the provided connection factory implementation
-  .option("jms.source.messageFormat", "text")
-  .option("jms.source.receiveTimeoutMs", "1000")
-  .option("jms.source.commitIntervalMs", "10000")
-  .option("jms.source.numPartitions", "8")
+  .option("jms.messageFormat", "text")
+  .option("jms.receiveTimeoutMs", "1000")
+  .option("jms.commitIntervalMs", "10000")
+  .option("jms.numPartitions", "8")
   .load()
 ```
 
@@ -35,7 +34,7 @@ val df = spark.readStream
 
 The connector does not guarantee `Exactly-Once` delivery for sink operations.
 
-The input DataFrame must contain a field named `value` that holds the message content to be sent. The type of the field should be either `StringType` or `BinaryType`. The connector automatically handles type conversion based on the `jms.sink.messageFormat` option:
+The input DataFrame must contain a field named `value` that holds the message content to be sent. The type of the field should be either `StringType` or `BinaryType`. The connector automatically handles type conversion based on the `jms.messageFormat` option:
 
 /// html | div.format-table
 
@@ -53,10 +52,9 @@ This is an example that demonstrates how to use the connector to write data to a
 ```scala 
 df.writeStream
   .format("jms-v2") // or "jms-v1" depending on the used implementation
+  .option("jms.connection.broker.name", "my-broker")
   .option("jms.connection.queueName", "myQueue")
-  .option("jms.connection.factoryProvider", "com.example.MyConnectionFactoryProvider")
-  // broker specific options for the provided connection factory implementation
-  .option("jms.sink.messageFormat", "text")
+  .option("jms.messageFormat", "text")
   .option("checkpointLocation", "/tmp/checkpoint")
   .trigger(Trigger.ProcessingTime("10 seconds"))
   .start()
@@ -72,6 +70,7 @@ df.repartition(1) // Limit to 1 concurrent JMS connection
   .format("jms-v2")
   // other options
   .start()
+  .awaitTermination()
 ```
 
 The sink component of the connector includes retry logic that performs up to three attempts with exponential backoff, helping to handle temporary connection issues.

@@ -7,7 +7,7 @@ import io.github.dyaraev.spark.connector.jms.common.config.MessageFormat.{Binary
 import io.github.dyaraev.spark.connector.jms.common.metadata.LogEntry.Implicits._
 import io.github.dyaraev.spark.connector.jms.common.metadata.LogEntry.{BinaryLogEntry, TextLogEntry}
 import io.github.dyaraev.spark.connector.jms.common.metadata.{LogEntry, MetadataLog}
-import io.github.dyaraev.spark.connector.jms.common.{ConnectionFactoryProvider, ReceiverTask, SourceSchema}
+import io.github.dyaraev.spark.connector.jms.common.{ReceiverTask, SourceSchema}
 import io.github.dyaraev.spark.connector.jms.v2.SparkInternals.SparkLongOffset
 import jakarta.jms.{IllegalStateException, Message}
 import org.apache.spark.internal.Logging
@@ -60,6 +60,8 @@ object JmsScanBuilder {
       implicit toEntry: Message => T
   ) extends MicroBatchStream
       with Logging {
+
+    private val identifier: String = s"${config.connection.brokerName}:${config.connection.queueName}"
 
     private val spark = SparkSession.active
 
@@ -152,8 +154,7 @@ object JmsScanBuilder {
     override def toString: String = s"JmsSourceV2[$identifier]"
 
     private def initialize(): Unit = synchronized {
-      val provider = ConnectionFactoryProvider.createInstance(config.connection.factoryProvider)
-      val client = JmsSourceClient(provider, config.connection, transacted = true)
+      val client = JmsSourceClient(config.connection, transacted = true)
       val receiverTask = new ReceiverTask(client, config.bufferSize, config.receiveTimeoutMs, config.commitIntervalMs) {
 
         override protected def shouldStop(): Boolean = JmsMicroBatchStream.this.synchronized {
@@ -178,8 +179,6 @@ object JmsScanBuilder {
       receiverThread.setDaemon(true)
       receiverThread.start()
     }
-
-    private val identifier: String = s"${config.connection.factoryProvider}:${config.connection.queueName}"
   }
 
   private case class JmsInputPartition(slice: ArrayBuffer[InternalRow]) extends InputPartition

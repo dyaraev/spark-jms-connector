@@ -20,20 +20,32 @@ final case class JmsSourceConfig(
   }
 }
 
-//noinspection ScalaWeakerAccess
 object JmsSourceConfig {
 
-  val OptionBufferSize = "jms.source.bufferSize"
-  val OptionCommitIntervalMs = "jms.source.commitIntervalMs"
-  val OptionMessageFormat = "jms.source.messageFormat"
-  val OptionMessageSelector = "jms.source.messageSelector"
-  val OptionNumOffsetsToKeep = "jms.source.numOffsetsToKeep"
-  val OptionNumPartitions = "jms.source.numPartitions"
-  val OptionReceiveTimeoutMs = "jms.source.receiveTimeoutMs"
+  // noinspection ScalaWeakerAccess
+  val OptionBufferSize = "jms.bufferSize"
 
-  val DefaultBufferSize: Int = 5000
-  val DefaultCommitIntervalMs: Long = 5000
-  val DefaultNumOffsetsToKeep: Int = 100
+  // noinspection ScalaWeakerAccess
+  val OptionCommitIntervalMs = "jms.commitIntervalMs"
+
+  // noinspection ScalaWeakerAccess
+  val OptionMessageFormat = "jms.messageFormat"
+
+  // noinspection ScalaWeakerAccess
+  val OptionMessageSelector = "jms.messageSelector"
+
+  // noinspection ScalaWeakerAccess
+  val OptionNumOffsetsToKeep = "jms.numOffsetsToKeep"
+
+  // noinspection ScalaWeakerAccess
+  val OptionNumPartitions = "jms.numPartitions"
+
+  // noinspection ScalaWeakerAccess
+  val OptionReceiveTimeoutMs = "jms.receiveTimeoutMs"
+
+  private val DefaultBufferSize: Int = 5000
+  private val DefaultCommitIntervalMs: Long = 5000
+  private val DefaultNumOffsetsToKeep: Int = 100
 
   def fromOptions(options: CaseInsensitiveConfigMap): JmsSourceConfig = {
     val config = JmsSourceConfig(

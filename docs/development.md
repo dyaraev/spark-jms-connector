@@ -11,8 +11,8 @@ For instructions on building the project, see [the corresponding section](develo
 The project is organized into multiple modules:
 
 - **common**: Shared configuration and utilities
-- **connector-v1**: Connector implementation for Spark DataSourceV1 API
-- **connector-v2**: Connector implementation for Spark DataSourceV2 API
+- **connector-v1**: Connector implementation for Spark DataSource V1 API
+- **connector-v2**: Connector implementation for Spark DataSource V2 API
 - **examples**: Example applications demonstrating usage with the provided ActiveMQ implementation
 - **provider-activemq**: Simple implementation of ConnectionFactoryProvider for ActiveMQ
 
@@ -33,10 +33,15 @@ class MyConnectionFactoryProvider extends ConnectionFactoryProvider {
 
   override def getConnectionFactory(options: CaseInsensitiveConfigMap): ConnectionFactory = {
     // Return your JMS provider's ConnectionFactory
-    // You can access broker-specific options from the `options` parameter
+    // You can access broker-specific options (ones with the `jms.connection.broker.` prefix) from the `options` parameter 
   }
 }
 ```
+Broker name resolves a ConnectionFactoryProvider via Java Service Provider Interface (SPI). It must be unique and meet these rules:
+
+- length at least 3 characters
+- starts with a letter
+- only consists of `[A-Za-z0-9_-]`
 
 As an example, the `provider-activemq` module offers a simple implementation of `ConnectionFactoryProvider` for ActiveMQ.
 
