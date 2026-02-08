@@ -8,11 +8,12 @@ final case class JmsSourceConfig(
     commitIntervalMs: Long,
     bufferSize: Int,
     numOffsetsToKeep: Int,
-    receiveTimeoutMs: Option[Long],
+    receiveTimeoutMs: Long,
     numPartitions: Option[Int],
 ) {
 
   def validate(): Unit = {
+    require(receiveTimeoutMs > 0, "Receive interval must be positive")
     require(commitIntervalMs > 0, "Commit interval must be positive")
     require(bufferSize > 0, "Buffer size must be positive")
     require(numOffsetsToKeep > 0, "Number of offsets to keep must be positive")
@@ -43,6 +44,7 @@ object JmsSourceConfig {
   private val DefaultBufferSize: Int = 5000
   private val DefaultCommitIntervalMs: Long = 5000
   private val DefaultNumOffsetsToKeep: Int = 100
+  private val DefaultReceiveTimeoutMs: Long = 1000
 
   def fromOptions(options: CaseInsensitiveConfigMap): JmsSourceConfig = {
     val config = JmsSourceConfig(
@@ -51,7 +53,7 @@ object JmsSourceConfig {
       options.getOptional[Long](OptionCommitIntervalMs).getOrElse(DefaultCommitIntervalMs),
       options.getOptional[Int](OptionBufferSize).getOrElse(DefaultBufferSize),
       options.getOptional[Int](OptionNumOffsetsToKeep).getOrElse(DefaultNumOffsetsToKeep),
-      options.getOptional[Long](OptionReceiveTimeoutMs),
+      options.getOptional[Long](OptionReceiveTimeoutMs).getOrElse(DefaultReceiveTimeoutMs),
       options.getOptional[Int](OptionNumPartitions),
     )
     config.validate()
