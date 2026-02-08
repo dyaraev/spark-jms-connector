@@ -31,11 +31,8 @@ class JmsSourceClient(connection: Connection, session: Session, consumer: Messag
 
 object JmsSourceClient extends Logging {
 
-  def apply(
-      provider: ConnectionFactoryProvider,
-      config: JmsConnectionConfig,
-      transacted: Boolean,
-  ): JmsSourceClient = {
+  def apply(config: JmsConnectionConfig, transacted: Boolean): JmsSourceClient = {
+    val provider = ConnectionFactoryProvider.createInstanceByBrokerName(config.brokerName)
     val factory = provider.getConnectionFactory(config.brokerOptions)
     JmsSourceClient(factory, config.queueName, config.messageSelector, config.username, config.password, transacted)
   }

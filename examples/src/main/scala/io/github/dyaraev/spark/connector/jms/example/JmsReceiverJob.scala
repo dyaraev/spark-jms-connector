@@ -4,7 +4,7 @@ import io.github.dyaraev.spark.connector.jms.common.config.{JmsConnectionConfig,
 import io.github.dyaraev.spark.connector.jms.example.JmsReceiverJob.JmsReceiverJobConfig
 import io.github.dyaraev.spark.connector.jms.example.utils.ActiveMqBroker.ActiveMqAddress
 import io.github.dyaraev.spark.connector.jms.example.utils.Implicits.LetSyntax
-import io.github.dyaraev.spark.connector.jms.provider.activemq.{ActiveMqConfig, ActiveMqConnectionFactoryProvider}
+import io.github.dyaraev.spark.connector.jms.provider.activemq.ActiveMqConfig
 import org.apache.spark.sql.SparkSession
 import org.apache.spark.sql.streaming.{StreamingQuery, Trigger}
 
@@ -23,7 +23,7 @@ class JmsReceiverJob(config: JmsReceiverJobConfig) {
     spark.readStream
       .format(config.sourceFormat)
       .option(JmsConnectionConfig.OptionQueueName, config.queueName)
-      .option(JmsConnectionConfig.OptionFactoryProvider, classOf[ActiveMqConnectionFactoryProvider].getName)
+      .option(JmsConnectionConfig.OptionBrokerName, ActiveMqConfig.BrokerName)
       .option(JmsSourceConfig.OptionMessageFormat, MessageFormat.TextFormat.name)
       .option(JmsSourceConfig.OptionCommitIntervalMs, config.commitInterval.toMillis)
       .option(JmsSourceConfig.OptionNumPartitions, config.numPartitions.toString)

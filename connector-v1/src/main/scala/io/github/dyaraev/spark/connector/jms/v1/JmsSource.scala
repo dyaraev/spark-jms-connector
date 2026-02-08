@@ -1,9 +1,9 @@
 package io.github.dyaraev.spark.connector.jms.v1
 
+import io.github.dyaraev.spark.connector.jms.common.ReceiverTask
 import io.github.dyaraev.spark.connector.jms.common.client.JmsSourceClient
 import io.github.dyaraev.spark.connector.jms.common.config.JmsSourceConfig
 import io.github.dyaraev.spark.connector.jms.common.metadata.{LogEntry, MetadataLog}
-import io.github.dyaraev.spark.connector.jms.common.{ConnectionFactoryProvider, ReceiverTask}
 import jakarta.jms.Message
 import org.apache.spark.internal.Logging
 import org.apache.spark.sql.catalyst.InternalRow
@@ -24,6 +24,8 @@ class JmsSource[T <: LogEntry: ClassTag](
 )(implicit toEntry: Message => T)
     extends Source
     with Logging {
+
+  private val identifier: String = s"${config.connection.brokerName}:${config.connection.queueName}"
 
   @GuardedBy("this")
   private var receiverException: Throwable = _
@@ -73,8 +75,7 @@ class JmsSource[T <: LogEntry: ClassTag](
   }
 
   private def initialize(): Unit = {
-    val provider = ConnectionFactoryProvider.createInstance(config.connection.factoryProvider)
-    val client: JmsSourceClient = JmsSourceClient(provider, config.connection, transacted = true)
+    val client: JmsSourceClient = JmsSourceClient(config.connection, transacted = true)
     val receiverTask = new ReceiverTask(client, config.bufferSize, config.receiveTimeoutMs, config.commitIntervalMs) {
 
       override protected def shouldStop(): Boolean = JmsSource.this.synchronized {
@@ -96,7 +97,7 @@ class JmsSource[T <: LogEntry: ClassTag](
       }
     }
 
-    val receiverThread = new Thread(receiverTask, s"JmsReceiver[${provider.brokerName},${config.connection.queueName}]")
+    val receiverThread = new Thread(receiverTask, s"JmsReceiver[$identifier]")
     receiverThread.setDaemon(true)
     receiverThread.start()
   }

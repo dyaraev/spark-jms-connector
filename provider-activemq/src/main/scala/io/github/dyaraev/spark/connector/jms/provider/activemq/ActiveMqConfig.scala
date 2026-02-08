@@ -7,6 +7,8 @@ case class ActiveMqConfig(url: String)
 
 object ActiveMqConfig {
 
+  val BrokerName = "active-mq"
+
   val OptionsJmsBrokerAddress = "jms.connection.broker.address"
 
   def fromOptions(options: CaseInsensitiveConfigMap): ActiveMqConfig = {
