@@ -3,7 +3,7 @@ package io.github.dyaraev.spark.connector.jms.example
 import io.github.dyaraev.spark.connector.jms.common.config.{JmsConnectionConfig, JmsSinkConfig, MessageFormat}
 import io.github.dyaraev.spark.connector.jms.example.JmsSenderJob.JmsSenderJobConfig
 import io.github.dyaraev.spark.connector.jms.example.utils.ActiveMqBroker.ActiveMqAddress
-import io.github.dyaraev.spark.connector.jms.provider.activemq.{ActiveMqConfig, ActiveMqConnectionFactoryProvider}
+import io.github.dyaraev.spark.connector.jms.provider.activemq.ActiveMqConfig
 import org.apache.spark.sql.SparkSession
 import org.apache.spark.sql.functions._
 import org.apache.spark.sql.streaming.{StreamingQuery, Trigger}
@@ -30,8 +30,8 @@ class JmsSenderJob(schema: StructType, config: JmsSenderJobConfig) {
       .repartition(1)
       .writeStream
       .format(config.sinkFormat)
-      .option(JmsConnectionConfig.OptionBrokerName, ActiveMqConnectionFactoryProvider.BrokerName)
-      .option(JmsConnectionConfig.OptionQueueName, config.queueName)
+      .option(JmsConnectionConfig.OptionProvider, ActiveMqConfig.ProviderName)
+      .option(JmsConnectionConfig.OptionQueue, config.queueName)
       .option(JmsSinkConfig.OptionMessageFormat, MessageFormat.TextFormat.name)
       .option(ActiveMqConfig.OptionsJmsBrokerUrl, config.brokerAddress.toString)
       .trigger(Trigger.ProcessingTime(config.processingTime.toMillis))

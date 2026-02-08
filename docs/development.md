@@ -29,7 +29,7 @@ import jakarta.jms.ConnectionFactory
 
 class MyConnectionFactoryProvider extends ConnectionFactoryProvider {
   
-  override val brokerName: String = "my-broker"
+  override val name: String = "my-provider"
 
   override def getConnectionFactory(options: CaseInsensitiveConfigMap): ConnectionFactory = {
     // Return your JMS provider's ConnectionFactory

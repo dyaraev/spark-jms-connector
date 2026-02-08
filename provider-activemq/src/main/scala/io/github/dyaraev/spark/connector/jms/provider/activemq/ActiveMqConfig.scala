@@ -8,6 +8,9 @@ case class ActiveMqConfig(url: String)
 object ActiveMqConfig {
 
   // noinspection ScalaWeakerAccess
+  val ProviderName = "active-mq"
+
+  // noinspection ScalaWeakerAccess
   val OptionsJmsBrokerUrl = "jms.connection.broker.url"
 
   def fromOptions(options: CaseInsensitiveConfigMap): ActiveMqConfig = {

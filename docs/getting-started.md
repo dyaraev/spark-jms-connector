@@ -21,8 +21,8 @@ This is an example of how to use the connector to read data from a JMS queue:
 ```scala
 val df = spark.readStream
   .format("jms-v2") // or "jms-v1" depending on the used implementation
-  .option("jms.connection.broker.name", "my-broker")
-  .option("jms.connection.queueName", "myQueue")
+  .option("jms.connection.provider", "myProvider")
+  .option("jms.connection.queue", "myQueue")
   .option("jms.messageFormat", "text")
   .option("jms.receiveTimeoutMs", "1000")
   .option("jms.commitIntervalMs", "10000")
@@ -52,8 +52,8 @@ This is an example that demonstrates how to use the connector to write data to a
 ```scala 
 df.writeStream
   .format("jms-v2") // or "jms-v1" depending on the used implementation
-  .option("jms.connection.broker.name", "my-broker")
-  .option("jms.connection.queueName", "myQueue")
+  .option("jms.connection.provider", "myProvider")
+  .option("jms.connection.queue", "myQueue")
   .option("jms.messageFormat", "text")
   .option("checkpointLocation", "/tmp/checkpoint")
   .trigger(Trigger.ProcessingTime("10 seconds"))
