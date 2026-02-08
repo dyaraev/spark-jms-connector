@@ -11,13 +11,21 @@ final case class JmsConnectionConfig(
     brokerOptions: CaseInsensitiveConfigMap,
 )
 
-//noinspection ScalaWeakerAccess
 object JmsConnectionConfig {
 
+  // noinspection ScalaWeakerAccess
   val OptionQueueName = "jms.connection.queueName"
+
+  // noinspection ScalaWeakerAccess
   val OptionUsername = "jms.connection.username"
+
+  // noinspection ScalaWeakerAccess
   val OptionPassword = "jms.connection.password"
+
+  // noinspection ScalaWeakerAccess
   val OptionMessageSelector = "jms.connection.messageSelector"
+
+  // noinspection ScalaWeakerAccess
   val OptionBrokerName = "jms.connection.broker.name"
 
   private val BrokerOptionPrefix = "jms.connection.broker."

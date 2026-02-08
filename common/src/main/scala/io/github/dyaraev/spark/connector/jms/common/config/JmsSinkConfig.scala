@@ -15,8 +15,11 @@ case class JmsSinkConfig(
 
 object JmsSinkConfig {
 
-  val OptionMessageFormat = "jms.sink.messageFormat"
-  val OptionThrottlingDelayMs = "jms.sink.throttlingDelayMs"
+  // noinspection ScalaWeakerAccess
+  val OptionMessageFormat = "jms.messageFormat"
+
+  // noinspection ScalaWeakerAccess
+  val OptionThrottlingDelayMs = "jms.throttlingDelayMs"
 
   def fromOptions(options: CaseInsensitiveConfigMap, connection: Option[JmsConnectionConfig] = None): JmsSinkConfig = {
     val config = JmsSinkConfig(

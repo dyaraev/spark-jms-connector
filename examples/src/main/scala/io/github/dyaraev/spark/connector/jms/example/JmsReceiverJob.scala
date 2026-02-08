@@ -4,7 +4,7 @@ import io.github.dyaraev.spark.connector.jms.common.config.{JmsConnectionConfig,
 import io.github.dyaraev.spark.connector.jms.example.JmsReceiverJob.JmsReceiverJobConfig
 import io.github.dyaraev.spark.connector.jms.example.utils.ActiveMqBroker.ActiveMqAddress
 import io.github.dyaraev.spark.connector.jms.example.utils.Implicits.LetSyntax
-import io.github.dyaraev.spark.connector.jms.provider.activemq.ActiveMqConfig
+import io.github.dyaraev.spark.connector.jms.provider.activemq.{ActiveMqConfig, ActiveMqConnectionFactoryProvider}
 import org.apache.spark.sql.SparkSession
 import org.apache.spark.sql.streaming.{StreamingQuery, Trigger}
 
@@ -22,13 +22,13 @@ class JmsReceiverJob(config: JmsReceiverJobConfig) {
   private def runQuery(spark: SparkSession): StreamingQuery = {
     spark.readStream
       .format(config.sourceFormat)
+      .option(JmsConnectionConfig.OptionBrokerName, ActiveMqConnectionFactoryProvider.BrokerName)
       .option(JmsConnectionConfig.OptionQueueName, config.queueName)
-      .option(JmsConnectionConfig.OptionBrokerName, ActiveMqConfig.BrokerName)
       .option(JmsSourceConfig.OptionMessageFormat, MessageFormat.TextFormat.name)
       .option(JmsSourceConfig.OptionCommitIntervalMs, config.commitInterval.toMillis)
       .option(JmsSourceConfig.OptionNumPartitions, config.numPartitions.toString)
       .let(r => config.receiveTimeout.fold(r)(t => r.option(JmsSourceConfig.OptionReceiveTimeoutMs, t.toMillis)))
-      .option(ActiveMqConfig.OptionsJmsBrokerAddress, config.brokerAddress.toString)
+      .option(ActiveMqConfig.OptionsJmsBrokerUrl, config.brokerAddress.toString)
       .load()
       .repartition(1)
       .writeStream

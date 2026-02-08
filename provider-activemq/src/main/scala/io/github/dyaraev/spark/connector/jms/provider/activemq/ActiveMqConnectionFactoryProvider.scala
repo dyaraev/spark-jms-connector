@@ -7,10 +7,16 @@ import org.apache.activemq.ActiveMQConnectionFactory
 
 class ActiveMqConnectionFactoryProvider extends ConnectionFactoryProvider {
 
-  override val brokerName: String = ActiveMqConfig.BrokerName
+  override val brokerName: String = ActiveMqConnectionFactoryProvider.BrokerName
 
   override def getConnectionFactory(options: CaseInsensitiveConfigMap): ConnectionFactory = {
     val config = ActiveMqConfig.fromOptions(options)
     new ActiveMQConnectionFactory(config.url)
   }
+}
+
+object ActiveMqConnectionFactoryProvider {
+
+  // noinspection ScalaWeakerAccess
+  val BrokerName = "active-mq"
 }

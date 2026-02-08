@@ -5,7 +5,7 @@ import jakarta.jms.ConnectionFactory
 
 import java.util.{Locale, ServiceLoader}
 import scala.jdk.CollectionConverters._
-import scala.util.{Failure, Success, Try}
+import scala.util.control.NonFatal
 
 trait ConnectionFactoryProvider {
 
@@ -16,6 +16,11 @@ trait ConnectionFactoryProvider {
 
   /**
    * Build a JMS connection factory using the provided connector options.
+   *
+   * @param options
+   *   All options passed with the `jms.connection.broker.` prefix.
+   * @return
+   *   ConnectionFactory
    */
   def getConnectionFactory(options: CaseInsensitiveConfigMap): ConnectionFactory
 }
@@ -28,22 +33,14 @@ object ConnectionFactoryProvider {
    * Throws a [[RuntimeException]] if no matching provider is available.
    */
   def createInstanceByBrokerName(brokerName: String): ConnectionFactoryProvider = {
-    def errorMessage: String = s"Unable to find ConnectionFactoryProvider by broker name '$brokerName'"
-
-    tryLoad(brokerName) match {
-      case Success(cfp: ConnectionFactoryProvider) => cfp
-      case Success(_)                              => throw new RuntimeException(errorMessage)
-      case Failure(e)                              => throw new RuntimeException(errorMessage, e)
+    try {
+      val classLoader = Thread.currentThread().getContextClassLoader
+      val providersMapping = loadProviders(classLoader)
+      findProviderByBrokerName(providersMapping, brokerName)
+    } catch {
+      case NonFatal(e) =>
+        throw new RuntimeException(s"Unable to find ConnectionFactoryProvider by broker name '$brokerName'", e)
     }
-  }
-
-  /**
-   * Attempt provider lookup and wrap errors in a [[Try]].
-   */
-  private def tryLoad(brokerName: String): Try[ConnectionFactoryProvider] = Try {
-    val classLoader = Thread.currentThread().getContextClassLoader
-    val providersMapping = loadProviders(classLoader)
-    findProviderByBrokerName(providersMapping, brokerName)
   }
 
   /**
