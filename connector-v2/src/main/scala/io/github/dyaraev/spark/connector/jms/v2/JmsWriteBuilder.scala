@@ -62,10 +62,12 @@ object JmsWriteBuilder {
       override val config: JmsSinkConfig = JmsStreamingDataWriterFactory.this.config
 
       override val fromRow: InternalRow => String = valueFieldType match {
-        case StringType => (r: InternalRow) => fromInternalRow(r).getAs[String](SourceSchema.FieldValue)
+        case StringType =>
+          (r: InternalRow) => fromInternalRow(r).getAs[String](SourceSchema.FieldValue)
         case BinaryType =>
           (r: InternalRow) => new String(fromInternalRow(r).getAs[Array[Byte]](SourceSchema.FieldValue))
-        case t => throw new RuntimeException(s"Unsupported value type '$t'")
+        case t =>
+          throw new RuntimeException(s"Unsupported value type '$t'")
       }
 
       override def writeValue(value: String): Unit = sendMessage(_.sendTextMessage(value))
@@ -76,9 +78,12 @@ object JmsWriteBuilder {
       override val config: JmsSinkConfig = JmsStreamingDataWriterFactory.this.config
 
       override val fromRow: InternalRow => Array[Byte] = valueFieldType match {
-        case StringType => (r: InternalRow) => fromInternalRow(r).getAs[String](SourceSchema.FieldValue).getBytes
-        case BinaryType => (r: InternalRow) => fromInternalRow(r).getAs[Array[Byte]](SourceSchema.FieldValue)
-        case t          => throw new RuntimeException(s"Unsupported value type '$t'")
+        case StringType =>
+          (r: InternalRow) => fromInternalRow(r).getAs[String](SourceSchema.FieldValue).getBytes
+        case BinaryType =>
+          (r: InternalRow) => fromInternalRow(r).getAs[Array[Byte]](SourceSchema.FieldValue)
+        case t =>
+          throw new RuntimeException(s"Unsupported value type '$t'")
       }
 
       override def writeValue(value: Array[Byte]): Unit = sendMessage(_.sendBytesMessage(value))

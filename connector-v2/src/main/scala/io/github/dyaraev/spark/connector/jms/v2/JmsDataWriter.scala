@@ -7,9 +7,7 @@ import org.apache.spark.internal.Logging
 import org.apache.spark.sql.catalyst.InternalRow
 import org.apache.spark.sql.connector.write.{DataWriter, WriterCommitMessage}
 
-import scala.annotation.tailrec
 import scala.util.control.NonFatal
-import scala.util.{Failure, Success, Try}
 
 trait JmsDataWriter[T] extends DataWriter[InternalRow] with Serializable with Logging {
 
@@ -30,9 +28,9 @@ trait JmsDataWriter[T] extends DataWriter[InternalRow] with Serializable with Lo
   }
 
   override def commit(): WriterCommitMessage = {
-    val message = JmsCommitMessage(counter)
+    val currentCounter = counter
     commitJmsTransaction()
-    message
+    JmsCommitMessage(currentCounter)
   }
 
   override def close(): Unit = {
@@ -44,22 +42,14 @@ trait JmsDataWriter[T] extends DataWriter[InternalRow] with Serializable with Lo
     closeClientIfExists()
   }
 
-  protected def sendMessage(f: JmsSinkClient => Unit): Unit = sendMessage(f, attempt = 1)
-
-  @tailrec
-  private def sendMessage(f: JmsSinkClient => Unit, attempt: Int): Unit = {
-    Try(f(getOrCreateClient())) match {
-      case Success(_)           =>
-      case Failure(NonFatal(e)) =>
-        if (attempt <= JmsDataWriter.MaxSendAttempts) {
-          logError(s"Error sending message (attempt=$attempt), retrying ...", e)
-          Thread.sleep((scala.math.pow(2, attempt.toDouble) * JmsDataWriter.MinRetryInterval).toLong)
-          closeClientIfExists()
-          sendMessage(f, attempt + 1)
-        } else {
-          throw new RuntimeException("Unable to send message", e)
-        }
-      case Failure(e) => throw e
+  protected def sendMessage(f: JmsSinkClient => Unit): Unit = {
+    try {
+      f(getOrCreateClient())
+    } catch {
+      case NonFatal(e) =>
+        rollbackJmsTransaction()
+        closeClientIfExists()
+        throw new RuntimeException("Failed to send JMS message ", e)
     }
   }
 
@@ -71,19 +61,19 @@ trait JmsDataWriter[T] extends DataWriter[InternalRow] with Serializable with Lo
         counter = 0
       } catch {
         case NonFatal(e) =>
-          logError(s"Failed to commit JMS transaction", e)
-          throw new RuntimeException("JMS commit failed", e)
+          closeClientIfExists()
+          throw new RuntimeException("Failed to commit JMS transaction", e)
       }
     }
   }
 
   private def rollbackJmsTransaction(): Unit = {
-    if (client != null && counter > 0) {
+    if (client != null) {
       logWarning("Aborting JMS transaction")
-      try {
-        client.rollback()
-      } catch {
-        case NonFatal(e) => logError("Error rolling back JMS transaction", e)
+      try client.rollback()
+      catch {
+        case NonFatal(e) =>
+          logError("Failed to rollback JMS transaction", e)
       }
     }
   }
@@ -104,10 +94,6 @@ trait JmsDataWriter[T] extends DataWriter[InternalRow] with Serializable with Lo
 }
 
 object JmsDataWriter {
-
-  private val MaxSendAttempts: Int = 3
-
-  private val MinRetryInterval: Long = 5000
 
   case class JmsCommitMessage(numMessages: Int) extends WriterCommitMessage
 }
