@@ -25,13 +25,13 @@ The following options can be provided to both `DataStreamReader` and `DataStream
 
 /// html | div.conf-table
 
-| Option                    | Required | Description                                                     |
-|---------------------------|----------|-----------------------------------------------------------------|
-| `jms.connection.provider` | Yes      | Name of the `ConnectionFactoryProvider` provider implementation |
-| `jms.connection.queue`    | Yes      | Name of the JMS queue to read messages from                     |
-| `jms.connection.username` | No       | Username for JMS connection authentication                      |
-| `jms.connection.password` | No       | Password for JMS connection authentication                      |
-| `jms.connection.selector` | No       | JMS message selector for filtering messages                     |
+| Option                    | Required | Description                                            |
+|---------------------------|----------|--------------------------------------------------------|
+| `jms.connection.provider` | Yes      | Name of the `ConnectionFactoryProvider` implementation |
+| `jms.connection.queue`    | Yes      | Name of the JMS queue to read messages from            |
+| `jms.connection.username` | No       | Username for JMS connection authentication             |
+| `jms.connection.password` | No       | Password for JMS connection authentication             |
+| `jms.connection.selector` | No       | JMS message selector for filtering messages            |
 
 Broker specific options can be passed to the connector using the `jms.connection.broker.` prefix.
 
