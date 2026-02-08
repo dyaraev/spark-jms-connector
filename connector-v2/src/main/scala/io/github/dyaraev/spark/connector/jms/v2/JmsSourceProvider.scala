@@ -30,13 +30,14 @@ class JmsSourceProvider extends SimpleTableProvider with DataSourceRegister with
 
 object JmsSourceProvider {
 
+  // noinspection ScalaWeakerAccess
   val FormatName: String = "jms-v2"
 
   private class JmsTable(options: CaseInsensitiveConfigMap) extends Table with SupportsRead with SupportsWrite {
 
     // TODO: consider adding broker as a part of the table name
     override def name(): String = {
-      val queueName = options.getRequired[String](JmsConnectionConfig.OptionQueueName).toLowerCase(Locale.ROOT)
+      val queueName = options.getRequired[String](JmsConnectionConfig.OptionQueue).toLowerCase(Locale.ROOT)
       Seq("jms", CommonUtils.replaceNonWordChars(queueName, "_")).mkString("_")
     }
 

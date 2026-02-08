@@ -17,7 +17,7 @@ import java.util.Locale
 
 class JmsSourceProvider extends StreamSourceProvider with StreamSinkProvider with DataSourceRegister with Logging {
 
-  override def shortName(): String = "jms-v1"
+  override def shortName(): String = JmsSourceProvider.FormatName
 
   // TODO: consider adding broker as a part of the table name
   override def sourceSchema(
@@ -29,7 +29,7 @@ class JmsSourceProvider extends StreamSourceProvider with StreamSinkProvider wit
     assert(schema.isEmpty, "JMS source doesn't support custom schemas")
     val options = CaseInsensitiveConfigMap(parameters)
     val config = JmsSourceConfig.fromOptions(options)
-    val queueName = config.connection.queueName.toLowerCase(Locale.ROOT)
+    val queueName = config.connection.queue.toLowerCase(Locale.ROOT)
     val sourceName = Seq("jms", CommonUtils.replaceNonWordChars(queueName, "_")).mkString("_")
     (sourceName, SourceSchema.forFormat(config.messageFormat))
   }
@@ -63,4 +63,10 @@ class JmsSourceProvider extends StreamSourceProvider with StreamSinkProvider wit
     val config = JmsSinkConfig.fromOptions(options)
     new JmsSink(config)
   }
+}
+
+object JmsSourceProvider {
+
+  // noinspection ScalaWeakerAccess
+  val FormatName: String = "jms-v1"
 }

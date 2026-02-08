@@ -10,9 +10,9 @@ import scala.util.control.NonFatal
 trait ConnectionFactoryProvider {
 
   /**
-   * Broker identifier used to resolve providers via the SPI registry.
+   * Provider identifier used to resolve providers via the SPI registry.
    */
-  def brokerName: String
+  def name: String
 
   /**
    * Build a JMS connection factory using the provided connector options.
@@ -55,13 +55,13 @@ object ConnectionFactoryProvider {
       .asScala
       .toList
 
-    val invalid = providers.map(_.brokerName).filter(hasInvalidName)
+    val invalid = providers.map(_.name).filter(hasInvalidName)
     if (invalid.nonEmpty) {
       val invalidNames = formatBrokerNamesList(invalid)
       throw new RuntimeException(s"Invalid broker name(s): $invalidNames")
     }
 
-    val providersByName = providers.groupBy(_.brokerName.toLowerCase(Locale.ROOT))
+    val providersByName = providers.groupBy(_.name.toLowerCase(Locale.ROOT))
     val duplicates = providersByName.filter(_._2.length > 1).keys
     if (duplicates.nonEmpty) {
       val duplicateNames = formatBrokerNamesList(duplicates.toList)

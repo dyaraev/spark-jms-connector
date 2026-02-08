@@ -32,9 +32,6 @@ object JmsSourceConfig {
   val OptionMessageFormat = "jms.messageFormat"
 
   // noinspection ScalaWeakerAccess
-  val OptionMessageSelector = "jms.messageSelector"
-
-  // noinspection ScalaWeakerAccess
   val OptionNumOffsetsToKeep = "jms.numOffsetsToKeep"
 
   // noinspection ScalaWeakerAccess

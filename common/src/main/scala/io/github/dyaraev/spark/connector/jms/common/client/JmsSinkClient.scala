@@ -40,18 +40,15 @@ class JmsSinkClient(connection: Connection, session: Session, producer: MessageP
 
 object JmsSinkClient extends Logging {
 
-  def apply(
-      config: JmsConnectionConfig,
-      transacted: Boolean,
-  ): JmsSinkClient = {
-    val provider = ConnectionFactoryProvider.createInstanceByBrokerName(config.brokerName)
+  def apply(config: JmsConnectionConfig, transacted: Boolean): JmsSinkClient = {
+    val provider = ConnectionFactoryProvider.createInstanceByBrokerName(config.provider)
     val factory = provider.getConnectionFactory(config.brokerOptions)
-    JmsSinkClient(factory, config.queueName, config.username, config.password, transacted)
+    JmsSinkClient(factory, config.queue, config.username, config.password, transacted)
   }
 
   def apply(
       factory: ConnectionFactory,
-      queueName: String,
+      queue: String,
       username: Option[String] = None,
       password: Option[String] = None,
       transacted: Boolean = true,
@@ -59,8 +56,8 @@ object JmsSinkClient extends Logging {
     val sessionMode = if (transacted) Session.SESSION_TRANSACTED else Session.AUTO_ACKNOWLEDGE
     val connection = createConnection(factory, username, password)
     val session = connection.createSession(sessionMode)
-    val queue = session.createQueue(queueName)
-    val producer = session.createProducer(queue)
+    val destination = session.createQueue(queue)
+    val producer = session.createProducer(destination)
     new JmsSinkClient(connection, session, producer)
   }
 

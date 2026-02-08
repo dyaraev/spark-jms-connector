@@ -32,15 +32,15 @@ class JmsSourceClient(connection: Connection, session: Session, consumer: Messag
 object JmsSourceClient extends Logging {
 
   def apply(config: JmsConnectionConfig, transacted: Boolean): JmsSourceClient = {
-    val provider = ConnectionFactoryProvider.createInstanceByBrokerName(config.brokerName)
+    val provider = ConnectionFactoryProvider.createInstanceByBrokerName(config.provider)
     val factory = provider.getConnectionFactory(config.brokerOptions)
-    JmsSourceClient(factory, config.queueName, config.messageSelector, config.username, config.password, transacted)
+    JmsSourceClient(factory, config.queue, config.selector, config.username, config.password, transacted)
   }
 
   def apply(
       factory: ConnectionFactory,
-      queueName: String,
-      messageSelector: Option[String] = None,
+      queue: String,
+      selector: Option[String] = None,
       username: Option[String] = None,
       password: Option[String] = None,
       transacted: Boolean = true,
@@ -48,7 +48,7 @@ object JmsSourceClient extends Logging {
     val sessionMode = if (transacted) Session.SESSION_TRANSACTED else Session.AUTO_ACKNOWLEDGE
     val connection = createConnection(factory, username, password)
     val session = connection.createSession(sessionMode)
-    val consumer = createConsumer(session, queueName, messageSelector)
+    val consumer = createConsumer(session, queue, selector)
     new JmsSourceClient(connection, session, consumer)
   }
 
@@ -66,8 +66,8 @@ object JmsSourceClient extends Logging {
     connection
   }
 
-  private def createConsumer(session: Session, queueName: String, selector: Option[String]): MessageConsumer = {
-    val queue = session.createQueue(queueName)
-    session.createConsumer(queue, selector.orNull)
+  private def createConsumer(session: Session, queue: String, selector: Option[String]): MessageConsumer = {
+    val destination = session.createQueue(queue)
+    session.createConsumer(destination, selector.orNull)
   }
 }

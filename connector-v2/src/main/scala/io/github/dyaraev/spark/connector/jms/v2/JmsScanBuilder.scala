@@ -61,7 +61,7 @@ object JmsScanBuilder {
   ) extends MicroBatchStream
       with Logging {
 
-    private val identifier: String = s"${config.connection.brokerName}:${config.connection.queueName}"
+    private val identifier: String = s"${config.connection.provider}:${config.connection.queue}"
 
     private val spark = SparkSession.active
 

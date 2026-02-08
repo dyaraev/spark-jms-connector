@@ -118,22 +118,22 @@ object ConnectionFactoryProviderSpec {
   }
 
   private class TestProviderAlpha extends TestConnectionFactoryProvider {
-    override val brokerName: String = "alpha"
+    override val name: String = "alpha"
   }
 
   private class TestProviderBeta extends TestConnectionFactoryProvider {
-    override val brokerName: String = "beta"
+    override val name: String = "beta"
   }
 
   private class TestProviderAlphaDuplicate extends TestConnectionFactoryProvider {
-    override val brokerName: String = "ALPHA"
+    override val name: String = "ALPHA"
   }
 
   private class TestProviderInvalid extends TestConnectionFactoryProvider {
-    override val brokerName: String = "ab"
+    override val name: String = "ab"
   }
 
   private class TestProviderInvalidChars extends TestConnectionFactoryProvider {
-    override val brokerName: String = "a*b"
+    override val name: String = "a*b"
   }
 }

@@ -9,7 +9,7 @@ import io.github.dyaraev.spark.connector.jms.provider.activemq.ActiveMqConnectio
 
 df.writeStream
   .format("jms-v2")
-  .option("jms.connection.broker.name", "active-mq")
+  .option("jms.connection.provider", "active-mq")
   .option("jms.connection.broker.url", "tcp://localhost:61616")
   // other options
   .start()
@@ -25,13 +25,13 @@ The following options can be provided to both `DataStreamReader` and `DataStream
 
 /// html | div.conf-table
 
-| Option                           | Required | Description                                                                   |
-|----------------------------------|----------|-------------------------------------------------------------------------------|
-| `jms.connection.broker.name`     | Yes      | Fully qualified class name of the `ConnectionFactory` provider implementation |
-| `jms.connection.queueName`       | Yes      | Name of the JMS queue to read messages from                                   |
-| `jms.connection.username`        | No       | Username for JMS connection authentication                                    |
-| `jms.connection.password`        | No       | Password for JMS connection authentication                                    |
-| `jms.connection.messageSelector` | No       | JMS message selector for filtering messages                                   |
+| Option                    | Required | Description                                                     |
+|---------------------------|----------|-----------------------------------------------------------------|
+| `jms.connection.provider` | Yes      | Name of the `ConnectionFactoryProvider` provider implementation |
+| `jms.connection.queue`    | Yes      | Name of the JMS queue to read messages from                     |
+| `jms.connection.username` | No       | Username for JMS connection authentication                      |
+| `jms.connection.password` | No       | Password for JMS connection authentication                      |
+| `jms.connection.selector` | No       | JMS message selector for filtering messages                     |
 
 Broker specific options can be passed to the connector using the `jms.connection.broker.` prefix.
 

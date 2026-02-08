@@ -25,7 +25,7 @@ class JmsSource[T <: LogEntry: ClassTag](
     extends Source
     with Logging {
 
-  private val identifier: String = s"${config.connection.brokerName}:${config.connection.queueName}"
+  private val identifier: String = s"${config.connection.provider}:${config.connection.queue}"
 
   @GuardedBy("this")
   private var receiverException: Throwable = _
