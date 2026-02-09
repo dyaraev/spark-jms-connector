@@ -47,7 +47,6 @@ class JmsSource[T <: LogEntry: ClassTag](
     if (receiverException != null) throw new RuntimeException("JMS receiver error", receiverException)
 
     logInfo(s"Retrieved latest offset $currentOffset")
-    currentOffset.foreach(offset => metadataLog.purge(offset.offset - config.numOffsetsToKeep))
     currentOffset
   }
 
@@ -67,6 +66,12 @@ class JmsSource[T <: LogEntry: ClassTag](
   override def stop(): Unit = synchronized {
     logInfo("Stopping JMS source ...")
     stopFlag = true
+  }
+
+  override def commit(end: Offset): Unit = synchronized {
+    val endOffset = deserializeOffset(end)
+    logInfo(s"Last committed offset $endOffset")
+    metadataLog.purge(endOffset.offset - config.numOffsetsToKeep)
   }
 
   private def deserializeOffset(offset: Offset): SparkLongOffset = offset match {

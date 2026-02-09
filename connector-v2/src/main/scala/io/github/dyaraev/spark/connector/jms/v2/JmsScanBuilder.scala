@@ -98,6 +98,7 @@ object JmsScanBuilder {
       currentOffset
     }
 
+    // TODO: avoid materializing data on the driver
     override def planInputPartitions(start: Offset, end: Offset): Array[InputPartition] = {
       val startOrdinal = start.asInstanceOf[SparkLongOffset].offset + 1
       val endOrdinal = end.asInstanceOf[SparkLongOffset].offset
