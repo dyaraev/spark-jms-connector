@@ -4,7 +4,6 @@ import io.github.dyaraev.spark.connector.jms.common.SourceSchema
 import io.github.dyaraev.spark.connector.jms.common.client.JmsSinkClient
 import io.github.dyaraev.spark.connector.jms.common.config.MessageFormat.{BinaryFormat, TextFormat}
 import io.github.dyaraev.spark.connector.jms.common.config.{JmsConnectionConfig, JmsSinkConfig}
-import org.apache.spark.TaskContext
 import org.apache.spark.internal.Logging
 import org.apache.spark.rdd.RDD
 import org.apache.spark.sql.DataFrame
@@ -28,8 +27,8 @@ class JmsSink(config: JmsSinkConfig) extends Sink with Serializable with Logging
       logWarning(s"Skipping already committed batch $batchId")
     } else {
       val queryExecution = data.queryExecution
-      val rdd = queryExecution.toRdd
       val schema = queryExecution.analyzed.output
+      val rdd = queryExecution.toRdd
       config.messageFormat match {
         case TextFormat   => sendTextMessages(rdd, schema, batchId)
         case BinaryFormat => sendBytesMessages(rdd, schema, batchId)
@@ -69,14 +68,11 @@ object JmsSink {
     def sendAll(iter: Iterator[InternalRow], batchId: Long): Unit = {
       val projection = UnsafeProjection.create(expressions, schema)
       var counter = 0
-      withClient { client =>
+      withClient(batchId) { client =>
         iter.foreach { row =>
           val unsafeRow = projection(row)
           if (unsafeRow.isNullAt(0)) {
-            val partitionId = TaskContext.getPartitionId()
-            throw new RuntimeException(
-              s"Field 'value' contains null [batch=$batchId, partition=$partitionId, row=$counter]"
-            )
+            throw new RuntimeException("Field 'value' contains null")
           } else {
             val message = fromRow(unsafeRow)
             send(client, message)
@@ -95,15 +91,15 @@ object JmsSink {
       }
     }
 
-    private def withClient(f: JmsSinkClient => Unit): Unit = {
+    private def withClient(batchId: Long)(f: JmsSinkClient => Unit): Unit = {
       var client: JmsSinkClient = null
       try {
         client = JmsSinkClient(config, transacted = true)
         f(client)
       } catch {
         case NonFatal(e) =>
-          if (client != null) tryRollback(client)
-          throw e
+          if (client != null) rollbackJmsTransaction(client)
+          throw new RuntimeException(s"Failed to send JMS message(s) [batchId=$batchId]", e)
       } finally {
         if (client != null) client.closeSilently()
       }
@@ -120,7 +116,7 @@ object JmsSink {
       }
     }
 
-    private def tryRollback(client: JmsSinkClient): Unit = {
+    private def rollbackJmsTransaction(client: JmsSinkClient): Unit = {
       try client.rollback()
       catch {
         case e: Throwable =>

@@ -42,7 +42,7 @@ trait JmsDataWriter[T] extends DataWriter[InternalRow] with Serializable with Lo
     closeClientIfExists()
   }
 
-  protected def sendMessage(f: JmsSinkClient => Unit): Unit = {
+  protected def withClient(f: JmsSinkClient => Unit): Unit = {
     try {
       f(getOrCreateClient())
     } catch {

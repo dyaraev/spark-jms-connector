@@ -10,7 +10,7 @@ import org.apache.spark.sql.catalyst.InternalRow
 import org.apache.spark.sql.catalyst.encoders.ExpressionEncoder
 import org.apache.spark.sql.connector.write._
 import org.apache.spark.sql.connector.write.streaming.{StreamingDataWriterFactory, StreamingWrite}
-import org.apache.spark.sql.types.{BinaryType, StringType, StructType}
+import org.apache.spark.sql.types.{BinaryType, DataType, StringType, StructType}
 
 class JmsWriteBuilder(info: LogicalWriteInfo) extends WriteBuilder {
 
@@ -42,51 +42,44 @@ object JmsWriteBuilder {
   private class JmsStreamingDataWriterFactory(schema: StructType, config: JmsSinkConfig)
       extends StreamingDataWriterFactory {
 
-    private val fromInternalRow = ExpressionEncoder(schema).resolveAndBind().createDeserializer()
-
-    private val valueFieldType = schema.find(_.name == SourceSchema.FieldValue).map(_.dataType) match {
-      case Some(t) => t
-      case None    => throw new RuntimeException("Missing value type")
+    private val valueType = schema.find(_.name == SourceSchema.FieldValue).map(_.dataType).getOrElse {
+      throw new RuntimeException("Missing value type")
     }
 
     override def createWriter(partitionId: Int, taskId: Long, epochId: Long): DataWriter[InternalRow] = {
       config.messageFormat match {
-        case TextFormat   => newStringWriter
-        case BinaryFormat => newBinaryWriter
+        case TextFormat   => new JmsTextWriter(config, schema, valueType)
+        case BinaryFormat => new JmsBinaryWriter(config, schema, valueType)
         case format       => throw new RuntimeException(s"Unsupported message format '$format'")
       }
     }
+  }
 
-    private def newStringWriter: DataWriter[InternalRow] = new JmsDataWriter[String] {
+  private class JmsTextWriter(override val config: JmsSinkConfig, schema: StructType, valueType: DataType)
+      extends JmsDataWriter[String] {
 
-      override val config: JmsSinkConfig = JmsStreamingDataWriterFactory.this.config
+    private val fromInternalRow = ExpressionEncoder(schema).resolveAndBind().createDeserializer()
 
-      override val fromRow: InternalRow => String = valueFieldType match {
-        case StringType =>
-          (r: InternalRow) => fromInternalRow(r).getAs[String](SourceSchema.FieldValue)
-        case BinaryType =>
-          (r: InternalRow) => new String(fromInternalRow(r).getAs[Array[Byte]](SourceSchema.FieldValue))
-        case t =>
-          throw new RuntimeException(s"Unsupported value type '$t'")
-      }
-
-      override def writeValue(value: String): Unit = sendMessage(_.sendTextMessage(value))
+    override val fromRow: InternalRow => String = valueType match {
+      case StringType => (r: InternalRow) => fromInternalRow(r).getAs[String](SourceSchema.FieldValue)
+      case BinaryType => (r: InternalRow) => new String(fromInternalRow(r).getAs[Array[Byte]](SourceSchema.FieldValue))
+      case t          => throw new RuntimeException(s"Unsupported value type '$t'")
     }
 
-    private def newBinaryWriter: DataWriter[InternalRow] = new JmsDataWriter[Array[Byte]] {
+    override def writeValue(value: String): Unit = withClient(_.sendTextMessage(value))
+  }
 
-      override val config: JmsSinkConfig = JmsStreamingDataWriterFactory.this.config
+  private class JmsBinaryWriter(override val config: JmsSinkConfig, schema: StructType, valueType: DataType)
+      extends JmsDataWriter[Array[Byte]] {
 
-      override val fromRow: InternalRow => Array[Byte] = valueFieldType match {
-        case StringType =>
-          (r: InternalRow) => fromInternalRow(r).getAs[String](SourceSchema.FieldValue).getBytes
-        case BinaryType =>
-          (r: InternalRow) => fromInternalRow(r).getAs[Array[Byte]](SourceSchema.FieldValue)
-        case t =>
-          throw new RuntimeException(s"Unsupported value type '$t'")
-      }
+    private val fromInternalRow = ExpressionEncoder(schema).resolveAndBind().createDeserializer()
 
-      override def writeValue(value: Array[Byte]): Unit = sendMessage(_.sendBytesMessage(value))
+    override val fromRow: InternalRow => Array[Byte] = valueType match {
+      case StringType => (r: InternalRow) => fromInternalRow(r).getAs[String](SourceSchema.FieldValue).getBytes
+      case BinaryType => (r: InternalRow) => fromInternalRow(r).getAs[Array[Byte]](SourceSchema.FieldValue)
+      case t          => throw new RuntimeException(s"Unsupported value type '$t'")
     }
+
+    override def writeValue(value: Array[Byte]): Unit = withClient(_.sendBytesMessage(value))
   }
 }
