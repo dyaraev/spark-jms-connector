@@ -25,6 +25,7 @@ trait JmsDataWriter[T] extends DataWriter[InternalRow] with Serializable with Lo
   override def write(row: InternalRow): Unit = {
     writeValue(fromRow(row))
     counter += 1
+    config.throttlingDelayMs.foreach(Thread.sleep)
   }
 
   override def commit(): WriterCommitMessage = {

@@ -2,8 +2,8 @@ package io.github.dyaraev.spark.connector.jms.v1
 
 import io.github.dyaraev.spark.connector.jms.common.SourceSchema
 import io.github.dyaraev.spark.connector.jms.common.client.JmsSinkClient
+import io.github.dyaraev.spark.connector.jms.common.config.JmsSinkConfig
 import io.github.dyaraev.spark.connector.jms.common.config.MessageFormat.{BinaryFormat, TextFormat}
-import io.github.dyaraev.spark.connector.jms.common.config.{JmsConnectionConfig, JmsSinkConfig}
 import io.github.dyaraev.spark.connector.jms.common.utils.CommonUtils
 import org.apache.spark.internal.Logging
 import org.apache.spark.rdd.RDD
@@ -41,13 +41,13 @@ class JmsSink(config: JmsSinkConfig) extends Sink with Serializable with Logging
 
   private def sendBytesMessages(rdd: RDD[InternalRow], schema: Seq[Attribute], batchId: Long): Unit = {
     rdd.foreachPartition { iter =>
-      new JmsSink.BytesMessageSender(config.connection, schema).sendAll(iter, batchId)
+      new JmsSink.BytesMessageSender(config, schema).sendAll(iter, batchId)
     }
   }
 
   private def sendTextMessages(rdd: RDD[InternalRow], schema: Seq[Attribute], batchId: Long): Unit = {
     rdd.foreachPartition { iter =>
-      new JmsSink.TextMessageSender(config.connection, schema).sendAll(iter, batchId)
+      new JmsSink.TextMessageSender(config, schema).sendAll(iter, batchId)
     }
   }
 }
@@ -56,7 +56,7 @@ object JmsSink {
 
   private trait MessageSender[T] extends Logging {
 
-    protected def config: JmsConnectionConfig
+    protected def config: JmsSinkConfig
 
     protected def schema: Seq[Attribute]
 
@@ -78,6 +78,7 @@ object JmsSink {
             val message = fromRow(unsafeRow)
             send(client, message)
             counter += 1
+            config.throttlingDelayMs.foreach(Thread.sleep)
           }
         }
         commitJmsTransaction(client, counter)
@@ -95,7 +96,7 @@ object JmsSink {
     private def withClient(batchId: Long)(f: JmsSinkClient => Unit): Unit = {
       var client: JmsSinkClient = null
       try {
-        client = JmsSinkClient(config, transacted = true)
+        client = JmsSinkClient(config.connection, transacted = true)
         f(client)
       } catch {
         case NonFatal(e) =>
@@ -126,7 +127,7 @@ object JmsSink {
     }
   }
 
-  private class TextMessageSender(override val config: JmsConnectionConfig, override val schema: Seq[Attribute])
+  private class TextMessageSender(override val config: JmsSinkConfig, override val schema: Seq[Attribute])
       extends MessageSender[String] {
 
     override protected def expressions: Seq[Expression] =
@@ -139,7 +140,7 @@ object JmsSink {
       client.sendTextMessage(message)
   }
 
-  private class BytesMessageSender(override val config: JmsConnectionConfig, override val schema: Seq[Attribute])
+  private class BytesMessageSender(override val config: JmsSinkConfig, override val schema: Seq[Attribute])
       extends MessageSender[Array[Byte]] {
 
     override protected def expressions: Seq[Expression] =
