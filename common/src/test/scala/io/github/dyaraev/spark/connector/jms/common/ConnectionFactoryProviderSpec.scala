@@ -16,26 +16,22 @@ class ConnectionFactoryProviderSpec extends AnyFunSuite with Matchers {
       classOf[ConnectionFactoryProviderSpec.TestProviderAlpha].getName,
       classOf[ConnectionFactoryProviderSpec.TestProviderBeta].getName,
     ) {
-      val provider = ConnectionFactoryProvider.createInstanceByBrokerName("ALPHA")
+      val provider = ConnectionFactoryProvider.createInstanceByBrokerName("alpha-mq")
       provider shouldBe a[ConnectionFactoryProviderSpec.TestProviderAlpha]
     }
   }
 
   test("createInstanceByBrokerName should report missing broker") {
     withServiceLoader(classOf[ConnectionFactoryProviderSpec.TestProviderAlpha].getName) {
-      val ex = intercept[RuntimeException] {
-        ConnectionFactoryProvider.createInstanceByBrokerName("missing")
-      }
+      val ex = intercept[RuntimeException](ConnectionFactoryProvider.createInstanceByBrokerName("missing"))
       ex.getMessage should include("Unable to find ConnectionFactoryProvider by broker name 'missing'")
       ex.getCause.getMessage should include("Cannot resolve a ConnectionFactoryProvider")
     }
   }
 
   test("loadProviders should reject invalid broker names") {
-    withServiceLoader(classOf[ConnectionFactoryProviderSpec.TestProviderInvalid].getName) {
-      val ex = intercept[RuntimeException] {
-        ConnectionFactoryProvider.createInstanceByBrokerName("anything")
-      }
+    withServiceLoader(classOf[ConnectionFactoryProviderSpec.TestProviderInvalidLength].getName) {
+      val ex = intercept[RuntimeException](ConnectionFactoryProvider.createInstanceByBrokerName("anything"))
       ex.getMessage should include("Unable to find ConnectionFactoryProvider by broker name 'anything'")
       ex.getCause.getMessage should include("Invalid broker name(s)")
     }
@@ -43,9 +39,7 @@ class ConnectionFactoryProviderSpec extends AnyFunSuite with Matchers {
 
   test("loadProviders should reject invalid characters in broker names") {
     withServiceLoader(classOf[ConnectionFactoryProviderSpec.TestProviderInvalidChars].getName) {
-      val ex = intercept[RuntimeException] {
-        ConnectionFactoryProvider.createInstanceByBrokerName("anything")
-      }
+      val ex = intercept[RuntimeException](ConnectionFactoryProvider.createInstanceByBrokerName("anything"))
       ex.getMessage should include("Unable to find ConnectionFactoryProvider by broker name 'anything'")
       ex.getCause.getMessage should include("Invalid broker name(s)")
     }
@@ -56,14 +50,13 @@ class ConnectionFactoryProviderSpec extends AnyFunSuite with Matchers {
       classOf[ConnectionFactoryProviderSpec.TestProviderAlpha].getName,
       classOf[ConnectionFactoryProviderSpec.TestProviderAlphaDuplicate].getName,
     ) {
-      val ex = intercept[RuntimeException] {
-        ConnectionFactoryProvider.createInstanceByBrokerName("alpha")
-      }
-      ex.getMessage should include("Unable to find ConnectionFactoryProvider by broker name 'alpha'")
+      val ex = intercept[RuntimeException](ConnectionFactoryProvider.createInstanceByBrokerName("alpha-mq"))
+      ex.getMessage should include("Unable to find ConnectionFactoryProvider by broker name 'alpha-mq'")
       ex.getCause.getMessage should include("Duplicate broker name(s) registered")
     }
   }
 
+  // TODO: create parent test directory
   private def withServiceLoader(providerClasses: String*)(run: => Unit): Unit = {
     val tempDir = Files.createTempDirectory("cfp-service-loader")
     val serviceFile = writeServiceFile(tempDir, providerClasses.toList)
@@ -118,22 +111,22 @@ object ConnectionFactoryProviderSpec {
   }
 
   private class TestProviderAlpha extends TestConnectionFactoryProvider {
-    override val name: String = "alpha"
+    override val name: String = "alpha-mq"
   }
 
   private class TestProviderBeta extends TestConnectionFactoryProvider {
-    override val name: String = "beta"
+    override val name: String = "beta-mq"
   }
 
   private class TestProviderAlphaDuplicate extends TestConnectionFactoryProvider {
-    override val name: String = "ALPHA"
+    override val name: String = "ALPHA-MQ"
   }
 
-  private class TestProviderInvalid extends TestConnectionFactoryProvider {
-    override val name: String = "ab"
+  private class TestProviderInvalidLength extends TestConnectionFactoryProvider {
+    override val name: String = "mq"
   }
 
   private class TestProviderInvalidChars extends TestConnectionFactoryProvider {
-    override val name: String = "a*b"
+    override val name: String = "m+q"
   }
 }
