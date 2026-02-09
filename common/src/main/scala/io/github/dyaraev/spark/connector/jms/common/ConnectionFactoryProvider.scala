@@ -2,6 +2,7 @@ package io.github.dyaraev.spark.connector.jms.common
 
 import io.github.dyaraev.spark.connector.jms.common.config.CaseInsensitiveConfigMap
 import jakarta.jms.ConnectionFactory
+import org.apache.spark.internal.Logging
 
 import java.util.{Locale, ServiceLoader}
 import scala.jdk.CollectionConverters._
@@ -25,7 +26,7 @@ trait ConnectionFactoryProvider {
   def getConnectionFactory(options: CaseInsensitiveConfigMap): ConnectionFactory
 }
 
-object ConnectionFactoryProvider {
+object ConnectionFactoryProvider extends Logging {
 
   /**
    * Resolve a provider by broker name via [[ServiceLoader]] using the thread context [[ClassLoader]].
@@ -78,12 +79,14 @@ object ConnectionFactoryProvider {
       providers: Map[String, ConnectionFactoryProvider],
       brokerName: String,
   ): ConnectionFactoryProvider = {
-    providers.getOrElse(
-      brokerName.toLowerCase(Locale.ROOT), {
+    providers.get(brokerName.toLowerCase(Locale.ROOT)) match {
+      case Some(provider) =>
+        logInfo(s"Loaded JMS connection provider: ${provider.name}")
+        provider
+      case None =>
         val availableNames = formatBrokerNamesList(providers.keys.toList)
         throw new RuntimeException(s"Cannot resolve a ConnectionFactoryProvider (available brokers: $availableNames)")
-      },
-    )
+    }
   }
 
   /**
