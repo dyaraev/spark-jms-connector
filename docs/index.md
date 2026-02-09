@@ -30,8 +30,8 @@ The limitations include the following:
 - Sending messages is done in executors, so every executor task creates its own connection.
 - The number of connections used by the sink component depends on the number of partitions.
 - Connections in the sink component are created for each batch and not reused.
-- The connector uses a fail-fast strategy, so no proper retry logic for failed writes is implemented.
-- Messages are written to the write-ahead log using Java serialization, which may be non-optimal, especially for large messages. Changing the JVM or Spark version can make the write-ahead log unreadable.
+- The connector uses a fail-fast strategy, so no proper retry logic for failed writes is implemented. The sink component relies on the Spark built-in retry mechanism.
+- Messages are written to the write-ahead log using Java serialization, which may be non-optimal, especially for large messages. Changing the JVM or Spark version can make the existing write-ahead log unreadable.
 - Receiving messages from a queue is done in a driver in a single threaded manner, so it may affect performance in distributed environments.
 
 ## Requirements
