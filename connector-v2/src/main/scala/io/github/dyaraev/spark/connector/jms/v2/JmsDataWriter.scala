@@ -25,7 +25,7 @@ trait JmsDataWriter[T] extends DataWriter[InternalRow] with Serializable with Lo
   override def write(row: InternalRow): Unit = {
     writeValue(fromRow(row))
     counter += 1
-    config.throttlingDelayMs.foreach(Thread.sleep)
+    safeSleep()
   }
 
   override def commit(): WriterCommitMessage = {
@@ -76,6 +76,17 @@ trait JmsDataWriter[T] extends DataWriter[InternalRow] with Serializable with Lo
         case NonFatal(e) =>
           logError("Failed to rollback JMS transaction", e)
       }
+    }
+  }
+
+  private def safeSleep(): Unit = {
+    try config.throttlingDelayMs.foreach(Thread.sleep)
+    catch {
+      case e: InterruptedException =>
+        rollbackJmsTransaction()
+        closeClientIfExists()
+        Thread.currentThread().interrupt()
+        throw e
     }
   }
 

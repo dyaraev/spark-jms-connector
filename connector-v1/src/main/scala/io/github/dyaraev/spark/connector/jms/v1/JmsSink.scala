@@ -78,7 +78,7 @@ object JmsSink {
             val message = fromRow(unsafeRow)
             send(client, message)
             counter += 1
-            config.throttlingDelayMs.foreach(Thread.sleep)
+            safeSleep(client)
           }
         }
         commitJmsTransaction(client, counter)
@@ -112,8 +112,7 @@ object JmsSink {
         logInfo(s"Committing $numMessages JMS messages")
         try client.commit()
         catch {
-          case NonFatal(e) =>
-            throw new RuntimeException("JMS commit failed", e)
+          case NonFatal(e) => throw new RuntimeException("JMS commit failed", e)
         }
       }
     }
@@ -121,8 +120,17 @@ object JmsSink {
     private def rollbackJmsTransaction(client: JmsSinkClient): Unit = {
       try client.rollback()
       catch {
-        case e: Throwable =>
-          logError("Unable to rollback transaction", e)
+        case e: Throwable => logError("Unable to rollback transaction", e)
+      }
+    }
+
+    private def safeSleep(client: JmsSinkClient): Unit = {
+      try config.throttlingDelayMs.foreach(Thread.sleep)
+      catch {
+        case e: InterruptedException =>
+          rollbackJmsTransaction(client)
+          Thread.currentThread().interrupt()
+          throw e
       }
     }
   }
