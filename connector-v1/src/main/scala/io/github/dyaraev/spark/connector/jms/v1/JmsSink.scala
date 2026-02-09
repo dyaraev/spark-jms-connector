@@ -4,6 +4,7 @@ import io.github.dyaraev.spark.connector.jms.common.SourceSchema
 import io.github.dyaraev.spark.connector.jms.common.client.JmsSinkClient
 import io.github.dyaraev.spark.connector.jms.common.config.MessageFormat.{BinaryFormat, TextFormat}
 import io.github.dyaraev.spark.connector.jms.common.config.{JmsConnectionConfig, JmsSinkConfig}
+import io.github.dyaraev.spark.connector.jms.common.utils.CommonUtils
 import org.apache.spark.internal.Logging
 import org.apache.spark.rdd.RDD
 import org.apache.spark.sql.DataFrame
@@ -99,7 +100,7 @@ object JmsSink {
       } catch {
         case NonFatal(e) =>
           if (client != null) rollbackJmsTransaction(client)
-          throw new RuntimeException(s"Failed to send JMS message(s) [batchId=$batchId]", e)
+          throw new RuntimeException(CommonUtils.formatMessage("Failed to send JMS message(s)", Some(batchId)), e)
       } finally {
         if (client != null) client.closeSilently()
       }

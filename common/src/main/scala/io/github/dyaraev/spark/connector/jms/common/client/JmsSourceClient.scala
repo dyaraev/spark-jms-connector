@@ -22,8 +22,6 @@ class JmsSourceClient(connection: Connection, session: Session, consumer: Messag
     catch CommonUtils.logException("Error while closing the connection")
   }
 
-  def receiveNoWait: Message = consumer.receiveNoWait()
-
   def receive(timeout: Long): Message = consumer.receive(timeout)
 
   def commit(): Unit = session.commit()
