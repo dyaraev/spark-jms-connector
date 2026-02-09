@@ -73,8 +73,6 @@ df.repartition(1) // Limit to 1 concurrent JMS connection
   .awaitTermination()
 ```
 
-The sink component of the connector includes retry logic that performs up to three attempts with exponential backoff, helping to handle temporary connection issues.
-
 ## Running Examples
 
 The project includes examples for working with ActiveMQ. To run each example, you have to execute two commands:
