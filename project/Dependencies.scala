@@ -6,10 +6,6 @@ object Dependencies {
   val scala212Version: String = "2.12.21"
   val scala213Version: String = "2.13.18"
 
-  // Default versions
-  val defaultScalaVersion: String = scala213Version
-  val defaultSparkVersion: String = "4.1.1"
-
   // Connector dependencies
   private val jakartaJmsVersion = "3.1.0"
   private val scalaTestVersion = "3.2.19"
@@ -54,5 +50,16 @@ object Dependencies {
       "org.apache.spark" %% "spark-sql" % sparkVersion % conf,
       "org.apache.spark" %% "spark-streaming" % sparkVersion % conf,
     )
+  }
+
+  def deltaDependencies(sparkVersion: String, deltaVersion: Option[String]): Seq[ModuleID] = {
+    val version = deltaVersion.getOrElse {
+      sparkVersion match {
+        case x if x.startsWith("3.5.") => "3.3.2"
+        case x if x.startsWith("4.")   => "4.0.1"
+        case _ => throw new RuntimeException(s"Missing mapping for Delta Lake and Apache Spark $sparkVersion")
+      }
+    }
+    Seq("io.delta" %% "delta-spark" % version)
   }
 }

@@ -17,7 +17,7 @@ import scala.util.{Success, Try}
 
 /**
  * Runs a Spark Structured Streaming job that consumes messages from a JMS queue and writes them to the filesystem in
- * the Parquet format
+ * the Parquet format.
  */
 class JmsReceiverJob(config: JmsReceiverJobConfig) {
 

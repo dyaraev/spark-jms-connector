@@ -1,4 +1,5 @@
 lazy val sparkVersion = settingKey[String]("Version of Apache Spark libraries")
+lazy val deltaVersion = settingKey[Option[String]]("Version of Delta Lake libraries")
 
 inThisBuild(
   List(
@@ -7,8 +8,9 @@ inThisBuild(
     developers := List(Developer("dyaraev", "", "", url("https://github.com/dyaraev"))),
     homepage := Some(url("https://github.com/dyaraev/spark-jms-connector")),
     versionScheme := Some("early-semver"),
-    scalaVersion := Dependencies.defaultScalaVersion,
-    sparkVersion := sys.props.getOrElse("spark.version", Dependencies.defaultSparkVersion),
+    scalaVersion := Dependencies.scala213Version,
+    sparkVersion := sys.props.getOrElse("spark.version", "4.0.2"),
+    deltaVersion := sys.props.get("delta.version"),
   )
 )
 
@@ -136,7 +138,8 @@ lazy val examples = (project in file("examples"))
     run / fork := true,
     run / javaOptions ++= Seq("--add-exports", "java.base/sun.nio.ch=ALL-UNNAMED"),
     libraryDependencies ++= Dependencies.examples ++
-      Dependencies.sparkDependencies(sparkVersion.value, provided = false),
+      Dependencies.sparkDependencies(sparkVersion.value, provided = false) ++
+      Dependencies.deltaDependencies(sparkVersion.value, deltaVersion.value),
   )
 
 // ===================================== Helper functions ===================================== //
