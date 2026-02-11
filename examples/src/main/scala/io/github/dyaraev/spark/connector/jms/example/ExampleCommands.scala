@@ -3,6 +3,7 @@ package io.github.dyaraev.spark.connector.jms.example
 import cats.data.Validated
 import cats.implicits._
 import com.monovore.decline._
+import io.github.dyaraev.spark.connector.jms.example.JmsReceiverDeltaJob.JmsReceiverDeltaJobConfig
 import io.github.dyaraev.spark.connector.jms.example.JmsReceiverJob.JmsReceiverJobConfig
 import io.github.dyaraev.spark.connector.jms.example.JmsSenderJob.JmsSenderJobConfig
 import io.github.dyaraev.spark.connector.jms.example.utils.ActiveMqBroker.ActiveMqAddress
@@ -51,6 +52,42 @@ object ExampleCommands {
     }
   }
 
+  private val receiverDeltaJobCommand = Command("receiver-delta-job", "Spark job with exactly-once semantics") {
+    (CommonOpts.opts, ReceiverOpts.opts, MessageGenOpts.opts).mapN { (commonOpts, receiverOpts, genOpts) =>
+      val amqAddress = ActiveMqAddress(receiverOpts.brokerPort)
+      val result = for {
+        amqDataPath <- Try(commonOpts.workingDirectory.resolve("activemq-data"))
+        outputPath <- Try(commonOpts.workingDirectory.resolve("output-table"))
+        checkpointPath <- Try(commonOpts.workingDirectory.resolve("checkpoint"))
+        jobConfig = JmsReceiverDeltaJobConfig(
+          outputPath = outputPath,
+          checkpointPath = checkpointPath,
+          sourceFormat = receiverOpts.sourceFormat,
+          brokerAddress = amqAddress,
+          queueName = ReceiverOpts.QueueName,
+          numPartitions = receiverOpts.numPartitions,
+          receiveTimeout = receiverOpts.receiveTimeout,
+          commitInterval = receiverOpts.commitInterval,
+          processingTime = commonOpts.processingTime,
+        )
+        _ <- ActiveMqBroker.withActiveMqBroker(amqAddress, amqDataPath) { () =>
+          JmsReceiverDeltaJob.generatorFields.flatMap { fields =>
+            MessageGenerator.withGenerator(
+              fields,
+              amqAddress,
+              ReceiverOpts.QueueName,
+              genOpts.sendInterval,
+              genOpts.logInterval,
+            ) { () =>
+              SparkUtils.withSparkSession()(spark => JmsReceiverDeltaJob(jobConfig).runQueryAndWait(spark))
+            }
+          }
+        }
+      } yield ()
+      result.get
+    }
+  }
+
   private val senderJobCommand = Command("sender-job", "Spark job with a JMS sink") {
     (CommonOpts.opts, SenderOpts.opts, FileGenOpts.opts).mapN { (commonOpts, senderOpts, genOpts) =>
       val amqAddress = ActiveMqAddress(senderOpts.brokerPort)
@@ -83,7 +120,10 @@ object ExampleCommands {
   }
 
   val mainCommand: Command[Unit] = Command("ExampleApp", "Usage examples for the Spark JMS connector") {
-    Opts.subcommand(receiverJobCommand).orElse(Opts.subcommand(senderJobCommand))
+    Opts
+      .subcommand(receiverJobCommand)
+      .orElse(Opts.subcommand(receiverDeltaJobCommand))
+      .orElse(Opts.subcommand(senderJobCommand))
   }
 
   // Common options

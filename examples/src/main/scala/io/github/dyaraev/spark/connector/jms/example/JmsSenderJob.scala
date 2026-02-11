@@ -16,7 +16,7 @@ import scala.util.{Success, Try}
 
 /**
  * Runs a Spark Structured Streaming job that ingests files from the filesystem and sends extracted records as messages
- * to a JMS queue
+ * to a JMS queue.
  */
 class JmsSenderJob(schema: StructType, config: JmsSenderJobConfig) {
 
