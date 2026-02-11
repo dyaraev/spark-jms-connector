@@ -22,9 +22,9 @@ object MessageReceiver {
       f: () => Try[Unit]
   ): Try[Unit] = {
     val stopRef = new AtomicBoolean(false)
-    newReceiver(amqAddress, queue).flatMap { receiver =>
-      val future = receiver.run(receiveTimeout, logEmpty, stopRef)
-      val result = Try(f().get)
+    createSource(amqAddress, queue).flatMap { implicit source =>
+      val future = run(receiveTimeout, logEmpty, stopRef)
+      val result = Try(f()).flatten
 
       stopRef.set(true)
       Try[Unit](Await.ready(future, WaitTimeout))
@@ -34,36 +34,34 @@ object MessageReceiver {
     }
   }
 
-  private def newReceiver(amqAddress: ActiveMqAddress, queue: String): Try[MessageReceiver] = {
-    createSource(amqAddress, queue).map(source => new MessageReceiver(source))
-  }
-
   private def createSource(address: ActiveMqAddress, queue: String): Try[JmsSourceClient] = Try {
     val factory = new ActiveMQConnectionFactory(address.toString)
     JmsSourceClient(factory, queue, transacted = false)
   }
-}
 
-private class MessageReceiver(source: JmsSourceClient) {
-
-  import MessageReceiver.logger
-
-  private def run(receiveTimeout: Duration, logEmpty: Boolean, stopRef: AtomicBoolean): Future[Unit] = Future {
+  private def run(receiveTimeout: Duration, logEmpty: Boolean, stopRef: AtomicBoolean)(
+      implicit source: JmsSourceClient
+  ): Future[Unit] = Future {
     logger.info("Starting message receiver ...")
     while (!stopRef.get()) {
-      receiveAndPrint(receiveTimeout, logEmpty)
-        .recover { case e => logger.error(s"Failed to receive message", e) }
+      receiveAndPrint(receiveTimeout, logEmpty).recover { case e => logger.error(s"Failed to receive message", e) }
     }
     source.closeSilently()
     logger.info("Message receiver stopped")
   }
 
-  private def receiveAndPrint(receiveTimeout: Duration, logEmpty: Boolean): Try[Unit] = Try {
+  private def receiveAndPrint(receiveTimeout: Duration, logEmpty: Boolean)(
+      implicit source: JmsSourceClient
+  ): Try[Unit] = Try {
     Option(source.receive(receiveTimeout.toMillis)) match {
-      case Some(m: TextMessage)  => logger.info(s"TEXT: ${m.getText}")
-      case Some(m: BytesMessage) => logger.info(s"BYTES: ${m.getBodyLength}")
-      case Some(m)               => logger.info(s"UNKNOWN: ${m.getClass.getName}")
-      case None                  => if (logEmpty) logger.info("No message received")
+      case Some(m: TextMessage) =>
+        logger.info(s"Received message (TEXT): [length = ${m.getText.length}, value = ${m.getText}]")
+      case Some(m: BytesMessage) =>
+        logger.info(s"Received message (BYTES): [length = ${m.getBodyLength}]")
+      case Some(m) =>
+        logger.info(s"Received message (UNKNOWN): ${m.getClass.getName}")
+      case None =>
+        if (logEmpty) logger.info("No message received")
     }
   }
 }
