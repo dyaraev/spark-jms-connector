@@ -9,6 +9,7 @@ object Dependencies {
   // Connector dependencies
   private val jakartaJmsVersion = "3.1.0"
   private val scalaTestVersion = "3.2.19"
+  private val scalaMockVersion = "6.1.1"
 
   // Provider dependencies
   private val activeMqVersion = "6.2.0"
@@ -21,6 +22,7 @@ object Dependencies {
   lazy val connector: Seq[ModuleID] = Seq(
     "jakarta.jms" % "jakarta.jms-api" % jakartaJmsVersion,
     "org.scalatest" %% "scalatest" % scalaTestVersion % Test,
+    "org.scalamock" %% "scalamock" % scalaMockVersion % Test,
   )
 
   lazy val providerActiveMq: Seq[ModuleID] = Seq(

@@ -1,6 +1,5 @@
 package io.github.dyaraev.spark.connector.jms.common.client
 
-import io.github.dyaraev.spark.connector.jms.common.ConnectionFactoryProvider
 import io.github.dyaraev.spark.connector.jms.common.config.JmsConnectionConfig
 import io.github.dyaraev.spark.connector.jms.common.utils.CommonUtils
 import jakarta.jms._
@@ -8,6 +7,16 @@ import org.apache.spark.internal.Logging
 
 import java.io.Closeable
 
+/**
+ * Lightweight JMS source client wrapping a single connection/session/consumer trio.
+ *
+ * @param connection
+ *   JMS connection managed by this client.
+ * @param session
+ *   JMS session used to receive messages.
+ * @param consumer
+ *   JMS message consumer bound to the destination queue.
+ */
 class JmsSourceClient(connection: Connection, session: Session, consumer: MessageConsumer)
     extends Closeable
     with Logging {
@@ -17,24 +26,59 @@ class JmsSourceClient(connection: Connection, session: Session, consumer: Messag
     connection.close()
   }
 
+  /**
+   * Close the JMS connection, swallowing any exceptions.
+   */
   def closeSilently(): Unit = {
     try close()
     catch CommonUtils.logException("Error while closing the connection")
   }
 
+  /**
+   * Receive a message, waiting up to the provided timeout.
+   *
+   * @param timeout
+   *   Receive timeout in milliseconds.
+   */
   def receive(timeout: Long): Message = consumer.receive(timeout)
 
+  /**
+   * Commit the current JMS session transaction.
+   */
   def commit(): Unit = session.commit()
 }
 
 object JmsSourceClient extends Logging {
 
+  /**
+   * Create a JMS source client using connector connection settings.
+   *
+   * @param config
+   *   Connection configuration including provider name, queue, and broker options.
+   * @param transacted
+   *   Whether to create a transacted session.
+   */
   def apply(config: JmsConnectionConfig, transacted: Boolean): JmsSourceClient = {
-    val provider = ConnectionFactoryProvider.createInstanceByBrokerName(config.provider)
-    val factory = provider.getConnectionFactory(config.brokerOptions)
+    val factory = ConnectionFactoryCache.getOrCreate(config)
     JmsSourceClient(factory, config.queue, config.selector, config.username, config.password, transacted)
   }
 
+  /**
+   * Create a JMS source client from a connection factory.
+   *
+   * @param factory
+   *   JMS connection factory to build the connection.
+   * @param queue
+   *   Destination queue name.
+   * @param selector
+   *   Optional JMS selector expression.
+   * @param username
+   *   Optional username for broker authentication.
+   * @param password
+   *   Optional password for broker authentication.
+   * @param transacted
+   *   Whether to create a transacted session.
+   */
   def apply(
       factory: ConnectionFactory,
       queue: String,
