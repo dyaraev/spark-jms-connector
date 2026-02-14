@@ -1,8 +1,6 @@
 package io.github.dyaraev.spark.connector.jms.common.client
 
 import jakarta.jms._
-import org.apache.logging.log4j.core.LoggerContext
-import org.apache.logging.log4j.{Level, LogManager}
 import org.scalamock.scalatest.MockFactory
 import org.scalamock.util.Defaultable
 import org.scalatest.funsuite.AnyFunSuite
@@ -22,6 +20,7 @@ class JmsSinkClientSpec extends AnyFunSuite with Matchers with MockFactory {
     recording.started shouldBe true
     recording.sessionMode shouldBe Some(Session.SESSION_TRANSACTED)
     client.close()
+    recording.closed shouldBe true
   }
 
   test("sendTextMessage should create and send a text message") {
@@ -30,6 +29,7 @@ class JmsSinkClientSpec extends AnyFunSuite with Matchers with MockFactory {
     client.sendTextMessage("hello")
     recording.sentText shouldBe List("hello")
     client.close()
+    recording.closed shouldBe true
   }
 
   test("sendBytesMessage should create and send a bytes message") {
@@ -40,24 +40,31 @@ class JmsSinkClientSpec extends AnyFunSuite with Matchers with MockFactory {
     recording.sentBytes.size shouldBe 1
     recording.sentBytes.head.sameElements(payload) shouldBe true
     client.close()
+    recording.closed shouldBe true
   }
 
-  test("commit and rollback should delegate to session") {
+  test("commit should call session.commit()") {
     val recording = new Recording
     val client = buildTransactedClient(recording)
     client.commit()
-    client.rollback()
     recording.committed shouldBe 1
+    client.close()
+    recording.closed shouldBe true
+  }
+
+  test("rollback should delegate to session.rollback()") {
+    val recording = new Recording
+    val client = buildTransactedClient(recording)
+    client.rollback()
     recording.rolledBack shouldBe 1
     client.close()
+    recording.closed shouldBe true
   }
 
   test("closeSilently should swallow close exceptions") {
     val recording = new Recording(closeThrows = true)
     val client = buildTransactedClient(recording)
-    withLogLevels(Seq("CommonUtils", "io.github.dyaraev.spark.connector.jms.common.utils.CommonUtils"), Level.OFF) {
-      noException should be thrownBy client.closeSilently()
-    }
+    noException should be thrownBy client.closeSilently()
   }
 
   private def buildTransactedClient(recording: Recording): JmsSinkClient = {
@@ -106,23 +113,6 @@ class JmsSinkClientSpec extends AnyFunSuite with Matchers with MockFactory {
     (() => factory.createConnection).when().returns(connection)
 
     JmsSinkClient(factory, "queue", None, None)
-  }
-
-  private def withLogLevels(names: Seq[String], level: Level)(f: => Unit): Unit = {
-    val ctx = LogManager.getContext(false).asInstanceOf[LoggerContext]
-    val config = ctx.getConfiguration
-    val configs = names.map { name =>
-      val loggerConfig = config.getLoggerConfig(name)
-      val previous = loggerConfig.getLevel
-      loggerConfig.setLevel(level)
-      (loggerConfig, previous)
-    }
-    ctx.updateLoggers()
-    try f
-    finally {
-      configs.foreach { case (loggerConfig, previous) => loggerConfig.setLevel(previous) }
-      ctx.updateLoggers()
-    }
   }
 
   final private class Recording(

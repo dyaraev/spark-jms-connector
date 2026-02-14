@@ -1,8 +1,6 @@
 package io.github.dyaraev.spark.connector.jms.common.client
 
 import jakarta.jms._
-import org.apache.logging.log4j.core.LoggerContext
-import org.apache.logging.log4j.{Level, LogManager}
 import org.scalamock.scalatest.MockFactory
 import org.scalamock.util.Defaultable
 import org.scalatest.funsuite.AnyFunSuite
@@ -22,6 +20,7 @@ class JmsSourceClientSpec extends AnyFunSuite with Matchers with MockFactory {
     recording.started shouldBe true
     recording.sessionMode shouldBe Some(Session.SESSION_TRANSACTED)
     client.close()
+    recording.closed shouldBe true
   }
 
   test("receive should delegate to consumer") {
@@ -32,22 +31,22 @@ class JmsSourceClientSpec extends AnyFunSuite with Matchers with MockFactory {
     client.receive(100L) shouldBe message
     recording.lastReceiveTimeout shouldBe Some(100L)
     client.close()
+    recording.closed shouldBe true
   }
 
-  test("commit should delegate to session") {
+  test("commit should call session.commit()") {
     val recording = new Recording
     val client = buildTransactedClient(recording)
     client.commit()
     recording.committed shouldBe 1
     client.close()
+    recording.closed shouldBe true
   }
 
   test("closeSilently should swallow close exceptions") {
     val recording = new Recording(closeThrows = true)
     val client = buildTransactedClient(recording)
-    withLogLevels(Seq("CommonUtils", "io.github.dyaraev.spark.connector.jms.common.utils.CommonUtils"), Level.OFF) {
-      noException should be thrownBy client.closeSilently()
-    }
+    noException should be thrownBy client.closeSilently()
   }
 
   private def buildTransactedClient(recording: Recording): JmsSourceClient = {
@@ -72,30 +71,13 @@ class JmsSourceClientSpec extends AnyFunSuite with Matchers with MockFactory {
     (() => connection.start()).when().onCall { () => recording.started = true }
     (() => connection.close()).when().onCall { () =>
       recording.closed = true
-      if (recording.closeThrows) throw new RuntimeException("close failed")
+      if (recording.closeThrows) throw new RuntimeException("Close failed")
     }
 
     val factory = stub[ConnectionFactory]
     (() => factory.createConnection).when().returns(connection)
 
     JmsSourceClient(factory, "queue", None, None, None)
-  }
-
-  private def withLogLevels(names: Seq[String], level: Level)(f: => Unit): Unit = {
-    val ctx = LogManager.getContext(false).asInstanceOf[LoggerContext]
-    val config = ctx.getConfiguration
-    val configs = names.map { name =>
-      val loggerConfig = config.getLoggerConfig(name)
-      val previous = loggerConfig.getLevel
-      loggerConfig.setLevel(level)
-      (loggerConfig, previous)
-    }
-    ctx.updateLoggers()
-    try f
-    finally {
-      configs.foreach { case (loggerConfig, previous) => loggerConfig.setLevel(previous) }
-      ctx.updateLoggers()
-    }
   }
 
   final private class Recording(
