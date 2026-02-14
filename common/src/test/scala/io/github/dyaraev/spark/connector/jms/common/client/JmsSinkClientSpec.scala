@@ -3,12 +3,18 @@ package io.github.dyaraev.spark.connector.jms.common.client
 import jakarta.jms._
 import org.apache.logging.log4j.core.LoggerContext
 import org.apache.logging.log4j.{Level, LogManager}
+import org.scalamock.scalatest.MockFactory
+import org.scalamock.util.Defaultable
 import org.scalatest.funsuite.AnyFunSuite
 import org.scalatest.matchers.should.Matchers
 
-import java.lang.reflect.{Method, Proxy}
+import java.util.{Collections, Enumeration => JEnumeration}
 
-class JmsSinkClientSpec extends AnyFunSuite with Matchers {
+class JmsSinkClientSpec extends AnyFunSuite with Matchers with MockFactory {
+
+  implicit def defaultEnumeration[A]: Defaultable[JEnumeration[A]] = new Defaultable[java.util.Enumeration[A]] {
+    override val default: JEnumeration[A] = Collections.emptyEnumeration[A]()
+  }
 
   test("apply should start connection and use transacted session mode") {
     val recording = new Recording
@@ -55,103 +61,51 @@ class JmsSinkClientSpec extends AnyFunSuite with Matchers {
   }
 
   private def buildTransactedClient(recording: Recording): JmsSinkClient = {
-    val producer = newProxy(classOf[MessageProducer]) { (method, args) =>
-      method.getName match {
-        case "send" =>
-          val message = args.head.asInstanceOf[Message]
-          message match {
-            case text: TextMessage =>
-              recording.sentText = recording.sentText :+ text.getText
-            case _: BytesMessage =>
-            case _               =>
-          }
-          null
-        case _ => defaultReturn(method)
+    val producer = stub[MessageProducer]
+    (producer.send(_: Message)).when(*).onCall { message: Message =>
+      message match {
+        case text: TextMessage => recording.sentText = recording.sentText :+ text.getText
+        case _: BytesMessage   =>
+        case _                 =>
       }
     }
 
-    val session = newProxy(classOf[Session]) { (method, args) =>
-      method.getName match {
-        case "createQueue" =>
-          newProxy(classOf[Queue]) { (m, _) => defaultReturn(m) }
-        case "createProducer" =>
-          producer
-        case "createBytesMessage" =>
-          newProxy(classOf[BytesMessage]) { (m, a) =>
-            m.getName match {
-              case "writeBytes" =>
-                val bytes = a.head.asInstanceOf[Array[Byte]]
-                recording.sentBytes = recording.sentBytes :+ bytes
-                null
-              case _ => defaultReturn(m)
-            }
-          }
-        case "createTextMessage" =>
-          val text = args.head.asInstanceOf[String]
-          newProxy(classOf[TextMessage]) { (m, _) =>
-            m.getName match {
-              case "getText" => text
-              case _         => defaultReturn(m)
-            }
-          }
-        case "commit" =>
-          recording.committed += 1
-          null
-        case "rollback" =>
-          recording.rolledBack += 1
-          null
-        case _ => defaultReturn(method)
-      }
+    val queue = stub[Queue]
+    val session = stub[Session]
+    (session.createQueue(_: String)).when("queue").returns(queue)
+    (session.createProducer(_: Destination)).when(queue).returns(producer)
+
+    val bytesMessage = stub[BytesMessage]
+    (bytesMessage.writeBytes(_: Array[Byte])).when(*).onCall { bytes: Array[Byte] =>
+      recording.sentBytes = recording.sentBytes :+ bytes
     }
 
-    val connection = newProxy(classOf[Connection]) { (method, args) =>
-      method.getName match {
-        case "createSession" =>
-          recording.sessionMode = Some(args.head.asInstanceOf[Integer].toInt)
-          session
-        case "start" =>
-          recording.started = true
-          null
-        case "close" =>
-          recording.closed = true
-          if (recording.closeThrows) throw new RuntimeException("close failed")
-          null
-        case _ => defaultReturn(method)
-      }
+    (() => session.createBytesMessage).when().returns(bytesMessage)
+    (session.createTextMessage(_: String)).when(*).onCall { text: String =>
+      val textMessage = stub[TextMessage]
+      (() => textMessage.getText).when().returns(text)
+      textMessage
     }
 
-    val factory = newProxy(classOf[ConnectionFactory]) { (method, _) =>
-      method.getName match {
-        case "createConnection" =>
-          connection
-        case _ => defaultReturn(method)
-      }
+    (() => session.commit()).when().onCall { () => recording.committed += 1 }
+    (() => session.rollback()).when().onCall { () => recording.rolledBack += 1 }
+
+    val connection = stub[Connection]
+    (connection.createSession(_: Int)).when(Session.SESSION_TRANSACTED).onCall { mode: Int =>
+      recording.sessionMode = Some(mode)
+      session
     }
+
+    (() => connection.start()).when().onCall { () => recording.started = true }
+    (() => connection.close()).when().onCall { () =>
+      recording.closed = true
+      if (recording.closeThrows) throw new RuntimeException("close failed")
+    }
+
+    val factory = stub[ConnectionFactory]
+    (() => factory.createConnection).when().returns(connection)
 
     JmsSinkClient(factory, "queue", None, None)
-  }
-
-  private def newProxy[T](iface: Class[T])(handler: (Method, Array[AnyRef]) => AnyRef): T = {
-    Proxy
-      .newProxyInstance(
-        iface.getClassLoader,
-        Array[Class[_]](iface),
-        (_, method: Method, args: Array[AnyRef]) => handler(method, if (args == null) Array.empty[AnyRef] else args),
-      )
-      .asInstanceOf[T]
-  }
-
-  private def defaultReturn(method: Method): AnyRef = {
-    val returnType = method.getReturnType
-    if (!returnType.isPrimitive) {
-      null
-    } else if (returnType == java.lang.Boolean.TYPE) {
-      java.lang.Boolean.FALSE
-    } else if (returnType == java.lang.Void.TYPE) {
-      null
-    } else {
-      Integer.valueOf(0)
-    }
   }
 
   private def withLogLevels(names: Seq[String], level: Level)(f: => Unit): Unit = {
