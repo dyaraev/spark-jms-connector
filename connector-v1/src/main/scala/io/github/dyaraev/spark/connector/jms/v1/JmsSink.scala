@@ -21,7 +21,7 @@ class JmsSink(config: JmsSinkConfig) extends Sink with Serializable with Logging
   @volatile
   private var latestBatchId = -1L
 
-  override def toString: String = "JmsSink"
+  override def toString: String = "JmsSinkV1"
 
   override def addBatch(batchId: Long, data: DataFrame): Unit = {
     if (batchId <= latestBatchId) {
