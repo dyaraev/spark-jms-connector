@@ -1,7 +1,7 @@
 # Spark JMS Connector
 
 Spark JMS connector provides functionality for reading from and writing to JMS queues using Spark Structured Streaming.
-To ensure at-least-once delivery for streaming sources, the connector uses a write-ahead log to keep messages that haven’t yet been successfully written to the destination.
+To ensure At-Least-Once delivery for streaming sources, the connector uses a write-ahead log to keep messages that haven’t yet been successfully written to the destination.
 The project includes two versions of the connector: one built on Spark DataSource V1 and another on DataSource V2, with both supporting streaming sources and sinks.
 The implementations support similar configuration options and features.
 They use a provider-agnostic approach to connect to different JMS messaging systems.
