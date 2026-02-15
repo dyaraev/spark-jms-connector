@@ -2,7 +2,8 @@
 
 ## Reading from JMS Queue
 
-By default, the JMS source provides `At-Least-Once` delivery guarantee. `Exactly-Once` delivery can be achieved by using specific output formats, for instance, Delta Lake.
+By default, the JMS source provides At-Least-Once delivery guarantee. 
+Exactly-Once delivery can be achieved by using specific output formats, for instance, Delta Lake.
 
 The resulting DataFrame schema returned by the source consists of the following fields:
 
@@ -32,7 +33,10 @@ val df = spark.readStream
 
 ## Writing to JMS Queue
 
-The connector does not guarantee `Exactly-Once` delivery for sink operations.
+The connector does not guarantee Exactly-Once delivery for sink operations. 
+If a job fails after messages are committed, they will be re-delivered. 
+To achieve Exactly-Once delivery guarantees, the target system should support idempotent writes.
+Since we can only append to JMS queues, we can only talk about At-Least-Once semantics.
 
 The input DataFrame must contain a field named `value` that holds the message content to be sent. The type of the field should be either `StringType` or `BinaryType`. The connector automatically handles type conversion based on the `jms.messageFormat` option:
 
@@ -85,7 +89,7 @@ sbt "examples/runMain io.github.dyaraev.spark.connector.jms.example.ExampleApp r
 
 The example uses a message generator that sends text JMS messages with CSV payloads. 
 The job reads the JMS queue into a stream, parses the CSV fields, keeps the JMS metadata (`id`, `sent`, `received`) plus the parsed columns, and writes the result to Parquet files.
-There’s no deduplication, so it’s a straightforward at‑least‑once file sink.
+There’s no deduplication, so it’s a straightforward At‑Least‑Once file sink.
 
 ```bash
 # Run an ActiveMQ broker, a test message generator and an example Spark job with the JMS source.
@@ -97,7 +101,7 @@ As in the previous example, the source is CSV messages sent to a JMS queue by th
 The job reads the stream, parses the CSV fields, adds a `sent_dt` date from the message timestamp, and writes into a Delta table partitioned by day. 
 It uses JMS message ID represented by the `id` field and `sent_dt` as a composite merge key.
 It also drops duplicates per batch and inserts missing rows using the MERGE. 
-Assuming message IDs are unique for each day and the source is at‑least‑once, this gives exactly‑once results in the Delta table for that key.
+Assuming message IDs are unique for each day and the source is At‑Least‑Once, this gives Exactly‑Once results in the Delta table for that key.
 
 ```bash
 # Run an ActiveMQ broker, a test file generator, an example Spark job with the JMS sink and a test message reader.

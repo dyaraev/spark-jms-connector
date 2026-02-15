@@ -80,9 +80,9 @@ These command will create the following JAR files with specific version instead 
 
 For example:
 
-- `connector-v1/target/scala-2.13/spark-jms-connector-v1_2.13_spark-4.0.2_0.1.5.jar`
-- `connector-v2/target/scala-2.13/spark-jms-connector-v2_2.13_spark-4.0.2_0.1.5.jar`
-- `provider-activemq/target/scala-2.13/spark-jms-provider-activemq_2.13_4.0.2_0.1.5.jar`
+- `connector-v1/target/scala-2.13/spark-jms-connector-v1_2.13_spark-4.0.2_2.0.0.jar`
+- `connector-v2/target/scala-2.13/spark-jms-connector-v2_2.13_spark-4.0.2_2.0.0.jar`
+- `provider-activemq/target/scala-2.13/spark-jms-provider-activemq_2.13_4.0.2_2.0.0.jar`
 
 ## Contributing
 
