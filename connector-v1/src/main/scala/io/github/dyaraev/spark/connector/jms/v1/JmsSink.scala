@@ -21,7 +21,7 @@ class JmsSink(config: JmsSinkConfig) extends Sink with Serializable with Logging
   @volatile
   private var latestBatchId = -1L
 
-  override def toString: String = "JmsSink"
+  override def toString: String = "JmsSinkV1"
 
   override def addBatch(batchId: Long, data: DataFrame): Unit = {
     if (batchId <= latestBatchId) {
@@ -40,14 +40,14 @@ class JmsSink(config: JmsSinkConfig) extends Sink with Serializable with Logging
   }
 
   private def sendBytesMessages(rdd: RDD[InternalRow], schema: Seq[Attribute], batchId: Long): Unit = {
-    rdd.foreachPartition { iter =>
-      new JmsSink.BytesMessageSender(config, schema).sendAll(iter, batchId)
+    rdd.foreachPartition { iterator =>
+      new JmsSink.BytesMessageSender(config, schema).sendAll(iterator, batchId)
     }
   }
 
   private def sendTextMessages(rdd: RDD[InternalRow], schema: Seq[Attribute], batchId: Long): Unit = {
-    rdd.foreachPartition { iter =>
-      new JmsSink.TextMessageSender(config, schema).sendAll(iter, batchId)
+    rdd.foreachPartition { iterator =>
+      new JmsSink.TextMessageSender(config, schema).sendAll(iterator, batchId)
     }
   }
 }
@@ -66,11 +66,11 @@ object JmsSink {
 
     protected def send(client: JmsSinkClient, message: T): Unit
 
-    def sendAll(iter: Iterator[InternalRow], batchId: Long): Unit = {
+    def sendAll(iterator: Iterator[InternalRow], batchId: Long): Unit = {
       val projection = UnsafeProjection.create(expressions, schema)
       var counter = 0
       withClient(batchId) { client =>
-        iter.foreach { row =>
+        iterator.foreach { row =>
           val unsafeRow = projection(row)
           if (unsafeRow.isNullAt(0)) {
             throw new RuntimeException("Field 'value' contains null")
