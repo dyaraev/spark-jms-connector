@@ -2,7 +2,7 @@
 
 ## Reading from JMS Queue
 
-By default, the JMS source provides `At-Least-Once` delivery guarantee. `Exactly-Once` delivery can be achieved by using specific output formats, for instance, Delta Lake.
+By default, the JMS source provides ***At-Least-Once*** delivery guarantee. ***Exactly-Once*** delivery can be achieved by using specific output formats, for instance, Delta Lake.
 
 The resulting DataFrame schema returned by the source consists of the following fields:
 
@@ -32,7 +32,10 @@ val df = spark.readStream
 
 ## Writing to JMS Queue
 
-The connector does not guarantee `Exactly-Once` delivery for sink operations.
+The connector does not guarantee ***Exactly-Once*** delivery for sink operations. 
+If a job fails after messages are committed, they will be re-delivered. 
+To achieve ***Exactly-Once*** delivery guarantees, the target system should support idempotent writes.
+Since we can only append to JMS queues, we can only talk about ***At-Least-Once*** semantics.
 
 The input DataFrame must contain a field named `value` that holds the message content to be sent. The type of the field should be either `StringType` or `BinaryType`. The connector automatically handles type conversion based on the `jms.messageFormat` option:
 
