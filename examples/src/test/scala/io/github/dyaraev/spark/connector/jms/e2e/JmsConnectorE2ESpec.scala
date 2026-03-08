@@ -37,8 +37,7 @@ class JmsConnectorE2ESpec extends AnyFunSuite {
 
   private def runSinkE2eTest(format: String, queueName: String): Unit = {
     val expectedMin = 10
-    val suffix = Seq(format, queueName).map(_.replace('-', '_')).mkString("_")
-    withTempDir(s"test_$suffix") { tempDir =>
+    withTempDir(s"test-$format-$queueName") { tempDir =>
       withBroker(tempDir.resolve("amq")) { address =>
         withSparkSession(s"e2e-sink-$format") { spark =>
           val query = spark.readStream
@@ -72,14 +71,13 @@ class JmsConnectorE2ESpec extends AnyFunSuite {
   }
 
   private def runSourceE2eTest(format: String, queueName: String): Unit = {
-    val suffix = s"_${format.replace('-', '_')}_${queueName.replace('-', '_')}"
-    withTempDir(s"test_$suffix") { tempDir =>
+    withTempDir(s"test-$format-$queueName") { tempDir =>
       withBroker(tempDir.resolve("amq")) { address =>
         val messages = List("message_1", "MESSAGE_1", "message_2", "MESSAGE_2")
         sendTextMessages(address, queueName, messages)
 
         withSparkSession(s"e2e-source-$format") { spark =>
-          val queryName = s"query_$suffix"
+          val queryName = Seq("memory", format, queueName).map(_.replace('-', '_')).mkString("_")
           val query = spark.readStream
             .format(format)
             .option(JmsConnectionConfig.OptionProvider, ActiveMqConfig.ProviderName)
@@ -114,6 +112,12 @@ class JmsConnectorE2ESpec extends AnyFunSuite {
         }
       }
     }
+  }
+
+  private def withTempDir(prefix: String)(f: Path => Unit): Unit = {
+    val dir = Files.createTempDirectory(prefix)
+    try f(dir)
+    finally deleteRecursively(dir)
   }
 
   private def withBroker(dataDir: Path)(f: ActiveMqAddress => Unit): Unit = {
@@ -218,12 +222,6 @@ class JmsConnectorE2ESpec extends AnyFunSuite {
       selector = None,
       brokerOptions = CaseInsensitiveConfigMap(Map(ActiveMqConfig.OptionsJmsBrokerUrl -> address.toString)),
     )
-  }
-
-  private def withTempDir(prefix: String)(f: Path => Unit): Unit = {
-    val dir = Files.createTempDirectory(prefix)
-    try f(dir)
-    finally deleteRecursively(dir)
   }
 
   private def deleteRecursively(path: Path): Unit = {
