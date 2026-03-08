@@ -7,6 +7,14 @@ inThisBuild(
     description := "JMS Connector for Apache Spark",
     developers := List(Developer("dyaraev", "", "", url("https://github.com/dyaraev"))),
     homepage := Some(url("https://github.com/dyaraev/spark-jms-connector")),
+    publishTo := Some("GitHub Packages" at "https://maven.pkg.github.com/dyaraev/spark-jms-connector"),
+    publishMavenStyle := true,
+    credentials += Credentials(
+      "GitHub Package Registry",
+      "maven.pkg.github.com",
+      sys.env.getOrElse("GITHUB_ACTOR", ""),
+      sys.env.getOrElse("GITHUB_TOKEN", "")
+    ),
     versionScheme := Some("early-semver"),
     scalaVersion := Dependencies.scala213Version,
     sparkVersion := sys.props.getOrElse("spark.version", "4.1.1"),
