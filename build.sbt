@@ -137,6 +137,8 @@ lazy val examples = (project in file("examples"))
     name := "examples",
     run / fork := true,
     run / javaOptions ++= Seq("--add-exports", "java.base/sun.nio.ch=ALL-UNNAMED"),
+    Test / fork := true,
+    Test / javaOptions ++= Seq("--add-exports", "java.base/sun.nio.ch=ALL-UNNAMED"),
     libraryDependencies ++= Dependencies.examples ++
       Dependencies.sparkDependencies(sparkVersion.value, provided = false) ++
       Dependencies.deltaDependencies(sparkVersion.value, deltaVersion.value),

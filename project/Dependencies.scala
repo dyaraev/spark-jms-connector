@@ -43,6 +43,7 @@ object Dependencies {
     "com.fasterxml.jackson.core" % "jackson-databind" % jacksonVersion,
     "com.monovore" %% "decline-effect" % declineEffectVersion,
     "com.typesafe.scala-logging" %% "scala-logging" % scalaLoggingVersion,
+    "org.scalatest" %% "scalatest" % scalaTestVersion % Test,
   )
 
   def sparkDependencies(sparkVersion: String, provided: Boolean = true): Seq[ModuleID] = {
