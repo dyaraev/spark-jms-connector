@@ -59,7 +59,8 @@ object Dependencies {
     val version = deltaVersion.getOrElse {
       sparkVersion match {
         case x if x.startsWith("3.5.") => "3.3.2"
-        case x if x.startsWith("4.")   => "4.0.1"
+        case x if x.startsWith("4.0.")   => "4.0.1"
+        case x if x.startsWith("4.1.")   => "4.1.0"
         case _ => throw new RuntimeException(s"Missing mapping for Delta Lake and Apache Spark $sparkVersion")
       }
     }

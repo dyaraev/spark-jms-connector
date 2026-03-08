@@ -9,7 +9,7 @@ inThisBuild(
     homepage := Some(url("https://github.com/dyaraev/spark-jms-connector")),
     versionScheme := Some("early-semver"),
     scalaVersion := Dependencies.scala213Version,
-    sparkVersion := sys.props.getOrElse("spark.version", "4.0.2"),
+    sparkVersion := sys.props.getOrElse("spark.version", "4.1.1"),
     deltaVersion := sys.props.get("delta.version"),
   )
 )
