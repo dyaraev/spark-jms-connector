@@ -33,7 +33,7 @@ jobs:
     - name: Run checks and build JARs
       run: sbt -Dspark.version=${{ inputs.spark_version }} +clean +test +compile +scalafmtCheck "+scalafix --check" +assembly
 
-    - name: Run checks and build JARs
+    - name: Publish JARs
       run: sbt -Dspark.version=${{ inputs.spark_version }} +publish
 
 #    - name: Upload JARs for connector-v1 (Scala 2.12)
